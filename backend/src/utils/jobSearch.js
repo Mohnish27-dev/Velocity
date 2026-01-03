@@ -3,13 +3,18 @@ import "dotenv/config";
 
 const url = "https://jsearch.p.rapidapi.com/search";
 
+// Use consistent naming: RAPIDAPI_KEY (same as rapidApiService.js)
 const headers = {
-  "X-RapidAPI-Key": process.env.RAPID_API_KEY,
-  "X-RapidAPI-Host": process.env.RAPID_API_HOST
+  "X-RapidAPI-Key": process.env.RAPIDAPI_KEY,
+  "X-RapidAPI-Host": process.env.RAPIDAPI_HOST || "jsearch.p.rapidapi.com"
 };
 
 const fetchJobs = async (querystring) => {
   try {
+    if (!process.env.RAPIDAPI_KEY) {
+      console.warn('⚠️  RAPIDAPI_KEY not configured - job search disabled');
+      return { data: [], error: 'API key not configured' };
+    }
     const response = await axios.get(url, { headers, params: querystring });
     return {
       data: response.data.data ,

@@ -6,7 +6,7 @@ const API_BASE = '/api'
 async function getAuthHeaders() {
   const user = auth.currentUser
   if (!user) throw new Error('Not authenticated')
-  
+
   const token = await user.getIdToken()
   return {
     'Authorization': `Bearer ${token}`,
@@ -52,11 +52,11 @@ export const uploadApi = {
   async uploadPdf(file) {
     const user = auth.currentUser
     if (!user) throw new Error('Not authenticated')
-    
+
     const token = await user.getIdToken()
     const formData = new FormData()
     formData.append('resume', file)
-    
+
     const response = await fetch(`${API_BASE}/upload`, {
       method: 'POST',
       headers: {
@@ -71,11 +71,11 @@ export const uploadApi = {
   async extractText(file) {
     const user = auth.currentUser
     if (!user) throw new Error('Not authenticated')
-    
+
     const token = await user.getIdToken()
     const formData = new FormData()
     formData.append('resume', file)
-    
+
     const response = await fetch(`${API_BASE}/upload/extract-text`, {
       method: 'POST',
       headers: {
@@ -177,3 +177,343 @@ export const enhanceApi = {
     return handleResponse(response)
   }
 }
+
+// ============ JOBS API ============
+export const jobsApi = {
+  // Search jobs with query
+  async search(query, filters = {}) {
+    const headers = await getAuthHeaders()
+    const params = new URLSearchParams({ query, ...filters })
+    const response = await fetch(`${API_BASE}/fetchjobs?${params}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  }
+}
+
+// ============ JOB TRACKER API ============
+export const jobTrackerApi = {
+  // Get all tracked jobs
+  async getAll() {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-tracker`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // Track a new job application
+  async track(jobData) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-tracker`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(jobData)
+    })
+    return handleResponse(response)
+  },
+
+  // Update job application status
+  async updateStatus(jobId, status, notes = '') {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-tracker/${jobId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ status, notes })
+    })
+    return handleResponse(response)
+  },
+
+  // Delete tracked job
+  async delete(jobId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-tracker/${jobId}`, {
+      method: 'DELETE',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // Get job tracker stats
+  async getStats() {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-tracker/stats`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  }
+}
+
+// ============ JOB ALERTS API ============
+export const jobAlertsApi = {
+  // Get all job alerts (1-indexed)
+  async getAll() {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-alerts`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // Get single alert with notification history
+  async getById(alertId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-alerts/${alertId}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // Create new job alert
+  async create(alertData) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-alerts`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(alertData)
+    })
+    return handleResponse(response)
+  },
+
+  // Update job alert
+  async update(alertId, alertData) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-alerts/${alertId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(alertData)
+    })
+    return handleResponse(response)
+  },
+
+  // Delete job alert
+  async delete(alertId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-alerts/${alertId}`, {
+      method: 'DELETE',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // Toggle alert active status
+  async toggle(alertId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-alerts/${alertId}/toggle`, {
+      method: 'POST',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // Trigger test fetch for an alert
+  async test(alertId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-alerts/${alertId}/test`, {
+      method: 'POST',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // Get alerts summary stats
+  async getStats() {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/job-alerts/stats/summary`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  }
+}
+
+// ============ COMMUNITY API ============
+export const communityApi = {
+  // ---- Channels ----
+  async getChannels(type = 'all') {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/channels?type=${type}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async getChannel(channelId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/channels/${channelId}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async createChannel(data) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/channels`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async joinChannel(channelId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/channels/${channelId}/join`, {
+      method: 'POST',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async leaveChannel(channelId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/channels/${channelId}/leave`, {
+      method: 'POST',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async getChannelMessages(channelId, page = 1) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/channels/${channelId}/messages?page=${page}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // ---- Posts ----
+  async getPosts(params = {}) {
+    const headers = await getAuthHeaders()
+    const queryParams = new URLSearchParams(params).toString()
+    const response = await fetch(`${API_BASE}/community/posts?${queryParams}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async getPost(postId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/posts/${postId}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async createPost(data) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/posts`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async updatePost(postId, data) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/posts/${postId}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async deletePost(postId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/posts/${postId}`, {
+      method: 'DELETE',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async toggleLikePost(postId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/posts/${postId}/like`, {
+      method: 'POST',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // ---- Comments ----
+  async getComments(postId, page = 1) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/posts/${postId}/comments?page=${page}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async createComment(postId, data) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/posts/${postId}/comments`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async toggleLikeComment(commentId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/comments/${commentId}/like`, {
+      method: 'POST',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // ---- Direct Messages ----
+  async getConversations() {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/conversations`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async getConversationMessages(conversationId, page = 1) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/conversations/${conversationId}/messages?page=${page}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // ---- Presence ----
+  async getOnlineUsers() {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/online-users`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // ---- Search ----
+  async search(query, type = 'all') {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/community/search?q=${encodeURIComponent(query)}&type=${type}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  }
+}
+

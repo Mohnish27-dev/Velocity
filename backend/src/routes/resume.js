@@ -1,33 +1,31 @@
 import express from 'express';
-import { v4 as uuidv4 } from 'uuid';
 import { verifyToken } from '../middleware/auth.js';
 import { asyncHandler, ApiError } from '../middleware/errorHandler.js';
+import Resume from '../models/Resume.model.js';
 
 const router = express.Router();
-
-// In-memory storage for development (replace with Firebase Firestore in production)
-const resumeStore = new Map();
 
 // Get all resumes for a user
 router.get('/', verifyToken, asyncHandler(async (req, res) => {
   const userId = req.user.uid;
   
-  // Get resumes from store (in production, this would be Firebase Firestore)
-  const userResumes = [];
-  for (const [id, resume] of resumeStore) {
-    if (resume.userId === userId) {
-      userResumes.push({ id, ...resume });
-    }
-  }
+  // Get resumes from MongoDB sorted by creation date (newest first)
+  const userResumes = await Resume.find({ userId })
+    .sort({ createdAt: -1 })
+    .lean();
 
-  // Sort by creation date (newest first)
-  userResumes.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  // Transform _id to id for frontend compatibility
+  const resumes = userResumes.map(resume => ({
+    id: resume._id.toString(),
+    ...resume,
+    _id: undefined
+  }));
 
   res.json({
     success: true,
     data: {
-      resumes: userResumes,
-      count: userResumes.length
+      resumes,
+      count: resumes.length
     }
   });
 }));
@@ -37,7 +35,7 @@ router.get('/:resumeId', verifyToken, asyncHandler(async (req, res) => {
   const { resumeId } = req.params;
   const userId = req.user.uid;
 
-  const resume = resumeStore.get(resumeId);
+  const resume = await Resume.findById(resumeId).lean();
 
   if (!resume) {
     throw new ApiError(404, 'Resume not found');
@@ -49,7 +47,11 @@ router.get('/:resumeId', verifyToken, asyncHandler(async (req, res) => {
 
   res.json({
     success: true,
-    data: resume
+    data: {
+      id: resume._id.toString(),
+      ...resume,
+      _id: undefined
+    }
   });
 }));
 
@@ -68,28 +70,28 @@ router.post('/', verifyToken, asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Original text is required');
   }
 
-  const resumeId = uuidv4();
-  const now = new Date().toISOString();
-
-  const newResume = {
+  const newResume = await Resume.create({
     userId,
     originalText,
     enhancedText: enhancedText || null,
     jobRole: jobRole || null,
     preferences: preferences || {},
-    title: title || `Resume - ${new Date().toLocaleDateString()}`,
-    pdfUrl: null,
-    createdAt: now,
-    lastModified: now
-  };
-
-  resumeStore.set(resumeId, newResume);
+    title: title || `Resume - ${new Date().toLocaleDateString()}`
+  });
 
   res.status(201).json({
     success: true,
     data: {
-      id: resumeId,
-      ...newResume
+      id: newResume._id.toString(),
+      userId: newResume.userId,
+      originalText: newResume.originalText,
+      enhancedText: newResume.enhancedText,
+      jobRole: newResume.jobRole,
+      preferences: newResume.preferences,
+      title: newResume.title,
+      pdfUrl: newResume.pdfUrl,
+      createdAt: newResume.createdAt,
+      lastModified: newResume.lastModified
     }
   });
 }));
@@ -100,7 +102,7 @@ router.put('/:resumeId', verifyToken, asyncHandler(async (req, res) => {
   const userId = req.user.uid;
   const updates = req.body;
 
-  const resume = resumeStore.get(resumeId);
+  const resume = await Resume.findById(resumeId);
 
   if (!resume) {
     throw new ApiError(404, 'Resume not found');
@@ -127,20 +129,18 @@ router.put('/:resumeId', verifyToken, asyncHandler(async (req, res) => {
     }
   }
 
-  updateData.lastModified = new Date().toISOString();
-
-  const updatedResume = {
-    ...resume,
-    ...updateData
-  };
-
-  resumeStore.set(resumeId, updatedResume);
+  const updatedResume = await Resume.findByIdAndUpdate(
+    resumeId,
+    { $set: updateData },
+    { new: true, runValidators: true }
+  ).lean();
 
   res.json({
     success: true,
     data: {
-      id: resumeId,
-      ...updatedResume
+      id: updatedResume._id.toString(),
+      ...updatedResume,
+      _id: undefined
     }
   });
 }));
@@ -150,7 +150,7 @@ router.delete('/:resumeId', verifyToken, asyncHandler(async (req, res) => {
   const { resumeId } = req.params;
   const userId = req.user.uid;
 
-  const resume = resumeStore.get(resumeId);
+  const resume = await Resume.findById(resumeId);
 
   if (!resume) {
     throw new ApiError(404, 'Resume not found');
@@ -160,7 +160,7 @@ router.delete('/:resumeId', verifyToken, asyncHandler(async (req, res) => {
     throw new ApiError(403, 'Access denied');
   }
 
-  resumeStore.delete(resumeId);
+  await Resume.findByIdAndDelete(resumeId);
 
   res.json({
     success: true,
