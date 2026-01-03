@@ -7,6 +7,7 @@ async function getAuthHeaders() {
   const user = auth.currentUser
   if (!user) throw new Error('Not authenticated')
 
+
   const token = await user.getIdToken()
   return {
     'Authorization': `Bearer ${token}`,
@@ -53,9 +54,11 @@ export const uploadApi = {
     const user = auth.currentUser
     if (!user) throw new Error('Not authenticated')
 
+
     const token = await user.getIdToken()
     const formData = new FormData()
     formData.append('resume', file)
+
 
     const response = await fetch(`${API_BASE}/upload`, {
       method: 'POST',
@@ -72,9 +75,11 @@ export const uploadApi = {
     const user = auth.currentUser
     if (!user) throw new Error('Not authenticated')
 
+
     const token = await user.getIdToken()
     const formData = new FormData()
     formData.append('resume', file)
+
 
     const response = await fetch(`${API_BASE}/upload/extract-text`, {
       method: 'POST',
