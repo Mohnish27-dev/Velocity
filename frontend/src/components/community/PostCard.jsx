@@ -6,23 +6,28 @@ import {
   MessageCircle, 
   Share2, 
   Bookmark, 
-  MoreHorizontal,
   Eye,
-  Edit2,
-  Trash2,
-  Flag
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import CommentSection from './CommentSection';
 
-export default function PostCard({ post, currentUser, onLike, onDelete, onEdit }) {
-  const [showMenu, setShowMenu] = useState(false);
+export default function PostCard({ post, currentUser, onLike, onCommentAdded }) {
   const [showFullContent, setShowFullContent] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [commentCount, setCommentCount] = useState(post.commentCount || 0);
   const navigate = useNavigate();
 
   const isOwn = post.author.uid === currentUser?.uid;
   const isLiked = post.likes?.some(l => l.uid === currentUser?.uid);
   const contentPreviewLength = 300;
   const shouldTruncate = post.content.length > contentPreviewLength;
+
+  const handleCommentAdded = () => {
+    setCommentCount(prev => prev + 1);
+    onCommentAdded?.();
+  };
 
   const getInitials = (name) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??';
@@ -55,15 +60,16 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onEdit }
   };
 
   const handleShare = async () => {
+    const postId = post.id || post._id;
     try {
       await navigator.share({
         title: post.title,
         text: post.content.substring(0, 100) + '...',
-        url: window.location.origin + `/community/post/${post._id}`
+        url: window.location.origin + `/community/post/${postId}`
       });
     } catch {
       // Fallback: copy link
-      navigator.clipboard.writeText(window.location.origin + `/community/post/${post._id}`);
+      navigator.clipboard.writeText(window.location.origin + `/community/post/${postId}`);
     }
   };
 
@@ -102,54 +108,6 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onEdit }
                 </span>
               </div>
             </div>
-          </div>
-
-          {/* Actions Menu */}
-          <div className="relative">
-            <button
-              onClick={() => setShowMenu(!showMenu)}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-            >
-              <MoreHorizontal className="w-5 h-5" />
-            </button>
-
-            {showMenu && (
-              <div className="absolute right-0 mt-1 w-48 bg-white border rounded-lg shadow-lg py-1 z-10">
-                {isOwn ? (
-                  <>
-                    <button
-                      onClick={() => {
-                        onEdit?.(post);
-                        setShowMenu(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                      Edit Post
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm('Delete this post?')) {
-                          onDelete(post._id);
-                        }
-                        setShowMenu(false);
-                      }}
-                      className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Delete Post
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                  >
-                    <Flag className="w-4 h-4" />
-                    Report Post
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
@@ -239,19 +197,25 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onEdit }
         <div className="flex items-center gap-4">
           {/* Like */}
           <button
-            onClick={() => onLike(post._id)}
+            onClick={() => onLike(post.id || post._id)}
             className={`flex items-center gap-1.5 text-sm transition-colors ${
               isLiked ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
             }`}
           >
             <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-            <span>{post.likeCount || 0}</span>
+            <span>{Math.max(0, post.likes?.length || post.likeCount || 0)}</span>
           </button>
 
           {/* Comments */}
-          <button className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-indigo-600">
-            <MessageCircle className="w-5 h-5" />
-            <span>{post.commentCount || 0}</span>
+          <button 
+            onClick={() => setShowComments(!showComments)}
+            className={`flex items-center gap-1.5 text-sm transition-colors ${
+              showComments ? 'text-indigo-600' : 'text-gray-500 hover:text-indigo-600'
+            }`}
+          >
+            <MessageCircle className={`w-5 h-5 ${showComments ? 'fill-indigo-100' : ''}`} />
+            <span>{commentCount}</span>
+            {showComments ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
 
           {/* Share */}
@@ -268,6 +232,15 @@ export default function PostCard({ post, currentUser, onLike, onDelete, onEdit }
           <Bookmark className="w-5 h-5" />
         </button>
       </div>
+
+      {/* Comment Section */}
+      {showComments && (
+        <CommentSection
+          postId={post.id || post._id}
+          currentUser={currentUser}
+          onCommentAdded={handleCommentAdded}
+        />
+      )}
     </article>
   );
 }

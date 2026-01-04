@@ -53,15 +53,24 @@ export default function PostsFeed() {
     });
 
     const unsubLikeUpdated = subscribe('post_like_updated', ({ postId, likeCount, likes }) => {
-      setPosts(prev => prev.map(post => 
-        post._id === postId ? { ...post, likeCount, likes } : post
-      ));
+      // Only update if it's from another user's action (prevents duplicate updates from our own likes)
+      setPosts(prev => prev.map(post => {
+        const pId = post.id || post._id;
+        if (pId === postId) {
+          // Check if the like count is different to avoid unnecessary re-renders
+          if (post.likeCount !== likeCount) {
+            return { ...post, likeCount, likes };
+          }
+        }
+        return post;
+      }));
     });
 
     const unsubCommentAdded = subscribe('comment_added', ({ postId, commentCount }) => {
-      setPosts(prev => prev.map(post => 
-        post._id === postId ? { ...post, commentCount } : post
-      ));
+      setPosts(prev => prev.map(post => {
+        const pId = post.id || post._id;
+        return pId === postId ? { ...post, commentCount } : post;
+      }));
     });
 
     return () => {
@@ -115,18 +124,59 @@ export default function PostsFeed() {
   };
 
   const handleLikePost = async (postId) => {
+    // Optimistic update - immediately show the change
+    setPosts(prev => prev.map(post => {
+      const pId = post.id || post._id;
+      if (pId === postId) {
+        const currentLikes = post.likes || [];
+        const isCurrentlyLiked = currentLikes.some(l => l.uid === user?.uid);
+        
+        if (isCurrentlyLiked) {
+          // Unlike - remove user from likes
+          return {
+            ...post,
+            likes: currentLikes.filter(l => l.uid !== user?.uid),
+            likeCount: Math.max(0, (post.likeCount || currentLikes.length) - 1)
+          };
+        } else {
+          // Like - add user to likes
+          return {
+            ...post,
+            likes: [...currentLikes, { uid: user?.uid, name: user?.displayName || user?.name }],
+            likeCount: (post.likeCount || currentLikes.length) + 1
+          };
+        }
+      }
+      return post;
+    }));
+
     try {
-      const data = await communityApi.toggleLikePost(postId);
+      // Call API in background - socket will confirm the update
+      await communityApi.toggleLikePost(postId);
+    } catch (error) {
+      // Revert on error - toggle back
       setPosts(prev => prev.map(post => {
-        if (post._id === postId) {
-          const newLikes = data.liked
-            ? [...(post.likes || []), { uid: user.uid, name: user.displayName }]
-            : (post.likes || []).filter(l => l.uid !== user.uid);
-          return { ...post, likes: newLikes, likeCount: data.likeCount };
+        const pId = post.id || post._id;
+        if (pId === postId) {
+          const currentLikes = post.likes || [];
+          const isCurrentlyLiked = currentLikes.some(l => l.uid === user?.uid);
+          
+          if (isCurrentlyLiked) {
+            return {
+              ...post,
+              likes: currentLikes.filter(l => l.uid !== user?.uid),
+              likeCount: Math.max(0, (post.likeCount || currentLikes.length) - 1)
+            };
+          } else {
+            return {
+              ...post,
+              likes: [...currentLikes, { uid: user?.uid, name: user?.displayName || user?.name }],
+              likeCount: (post.likeCount || currentLikes.length) + 1
+            };
+          }
         }
         return post;
       }));
-    } catch (error) {
       toast.error('Failed to like post');
     }
   };
@@ -134,7 +184,10 @@ export default function PostsFeed() {
   const handleDeletePost = async (postId) => {
     try {
       await communityApi.deletePost(postId);
-      setPosts(prev => prev.filter(post => post._id !== postId));
+      setPosts(prev => prev.filter(post => {
+        const pId = post.id || post._id;
+        return pId !== postId;
+      }));
       toast.success('Post deleted');
     } catch (error) {
       toast.error(error.message);
@@ -260,15 +313,27 @@ export default function PostsFeed() {
             ))
           ) : filteredPosts.length > 0 ? (
             <>
-              {filteredPosts.map(post => (
-                <PostCard
-                  key={post._id}
-                  post={post}
-                  currentUser={user}
-                  onLike={handleLikePost}
-                  onDelete={handleDeletePost}
-                />
-              ))}
+              {filteredPosts.map(post => {
+                const postId = post.id || post._id;
+                return (
+                  <PostCard
+                    key={postId}
+                    post={post}
+                    currentUser={user}
+                    onLike={handleLikePost}
+                    onDelete={handleDeletePost}
+                    onCommentAdded={() => {
+                      // Update comment count in local state
+                      setPosts(prev => prev.map(p => {
+                        const pId = p.id || p._id;
+                        return pId === postId 
+                          ? { ...p, commentCount: (p.commentCount || 0) + 1 }
+                          : p;
+                      }));
+                    }}
+                  />
+                );
+              })}
 
               {hasMore && (
                 <button

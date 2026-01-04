@@ -24,17 +24,19 @@ export default function DirectMessages() {
   // Subscribe to new DMs
   useEffect(() => {
     const unsubNewDM = subscribe('new_direct_message', ({ message, conversation }) => {
+      const convId = conversation.id || conversation._id;
       // Update conversations list
       setConversations(prev => {
-        const exists = prev.find(c => c._id === conversation._id);
+        const exists = prev.find(c => (c.id || c._id) === convId);
         if (exists) {
-          return prev.map(c => c._id === conversation._id ? conversation : c);
+          return prev.map(c => (c.id || c._id) === convId ? conversation : c);
         }
         return [conversation, ...prev];
       });
 
       // Update messages if viewing this conversation
-      if (selectedConversation?._id === conversation._id) {
+      const selectedId = selectedConversation?.id || selectedConversation?._id;
+      if (selectedId === convId) {
         setMessages(prev => [...prev, message]);
       }
     });
@@ -64,8 +66,9 @@ export default function DirectMessages() {
   };
 
   const handleSelectConversation = (conv) => {
+    const convId = conv.id || conv._id;
     setSelectedConversation(conv);
-    fetchMessages(conv._id);
+    fetchMessages(convId);
   };
 
   const handleStartConversation = (targetUser) => {
@@ -117,16 +120,18 @@ export default function DirectMessages() {
         ) : conversations.length > 0 ? (
           <div className="py-2">
             {conversations.map(conv => {
+              const convId = conv.id || conv._id;
+              const selectedId = selectedConversation?.id || selectedConversation?._id;
               const otherUser = conv.otherParticipant;
               const isOnline = conv.isOnline;
               const unreadCount = conv.unreadCount || 0;
 
               return (
                 <button
-                  key={conv._id}
+                  key={convId}
                   onClick={() => handleSelectConversation(conv)}
                   className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${
-                    selectedConversation?._id === conv._id ? 'bg-indigo-50' : ''
+                    selectedId === convId ? 'bg-indigo-50' : ''
                   }`}
                 >
                   {/* Avatar with online status */}

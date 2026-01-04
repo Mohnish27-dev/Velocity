@@ -37,12 +37,35 @@ export const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // Handle Firebase errors
-  if (err.code && err.code.startsWith('auth/')) {
+  // Handle Firebase Auth errors (string codes like 'auth/invalid-token')
+  if (err.code && typeof err.code === 'string' && err.code.startsWith('auth/')) {
     return res.status(401).json({
       success: false,
       error: 'Authentication error',
       details: err.message
+    });
+  }
+
+  // Handle Firestore/gRPC errors (numeric codes)
+  if (err.code && typeof err.code === 'number') {
+    const grpcCodeMessages = {
+      1: 'Operation cancelled',
+      2: 'Unknown error',
+      3: 'Invalid argument',
+      4: 'Deadline exceeded',
+      5: 'Not found',
+      6: 'Already exists',
+      7: 'Permission denied',
+      9: 'Failed precondition - index may be required',
+      10: 'Aborted',
+      13: 'Internal error',
+      14: 'Service unavailable',
+      16: 'Unauthenticated'
+    };
+    return res.status(500).json({
+      success: false,
+      error: grpcCodeMessages[err.code] || 'Database error',
+      details: err.details || err.message
     });
   }
 

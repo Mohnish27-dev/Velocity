@@ -34,9 +34,153 @@ export default function Community() {
   const [activeChannel, setActiveChannel] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loadingChannels, setLoadingChannels] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   
   // Modal state
   const [showCreateChannel, setShowCreateChannel] = useState(false);
+
+  // Handle optimistic message - immediately show in UI
+  const handleOptimisticMessage = useCallback((optimisticMessage) => {
+    setMessages(prev => [...prev, optimisticMessage]);
+    // Update channel's last message
+    setChannels(prev => prev.map(ch => {
+      const chId = ch.id || ch._id;
+      return chId === optimisticMessage.channelId 
+        ? { ...ch, lastMessage: { content: optimisticMessage.content, senderName: optimisticMessage.sender.name, timestamp: optimisticMessage.createdAt } }
+        : ch;
+    }));
+  }, []);
+
+  // Handle optimistic reaction - immediately show in UI
+  const handleOptimisticReaction = useCallback(({ messageId, emoji, action }) => {
+    setMessages(prev => prev.map(msg => {
+      const msgId = msg.id || msg._id;
+      if (msgId !== messageId) return msg;
+      
+      let reactions = [...(msg.reactions || [])];
+      const reactionIndex = reactions.findIndex(r => r.emoji === emoji);
+      
+      if (action === 'add') {
+        if (reactionIndex >= 0) {
+          // Add user to existing reaction
+          const userAlreadyReacted = reactions[reactionIndex].users.some(u => u.uid === user?.uid);
+          if (!userAlreadyReacted) {
+            reactions[reactionIndex] = {
+              ...reactions[reactionIndex],
+              users: [...reactions[reactionIndex].users, { uid: user?.uid, name: user?.name || user?.displayName }]
+            };
+          }
+        } else {
+          // Create new reaction
+          reactions.push({
+            emoji,
+            users: [{ uid: user?.uid, name: user?.name || user?.displayName }]
+          });
+        }
+      } else if (action === 'remove') {
+        if (reactionIndex >= 0) {
+          reactions[reactionIndex] = {
+            ...reactions[reactionIndex],
+            users: reactions[reactionIndex].users.filter(u => u.uid !== user?.uid)
+          };
+          if (reactions[reactionIndex].users.length === 0) {
+            reactions = reactions.filter(r => r.emoji !== emoji);
+          }
+        }
+      }
+      
+      return { ...msg, reactions };
+    }));
+  }, [user]);
+
+  // Handle optimistic edit - immediately show in UI
+  const handleOptimisticEdit = useCallback(({ messageId, content }) => {
+    setMessages(prev => prev.map(msg => {
+      const msgId = msg.id || msg._id;
+      return msgId === messageId 
+        ? { ...msg, content, isEdited: true, editedAt: new Date().toISOString() }
+        : msg;
+    }));
+  }, []);
+
+  // Handle optimistic delete - immediately show in UI
+  const handleOptimisticDelete = useCallback(({ messageId }) => {
+    setMessages(prev => prev.map(msg => {
+      const msgId = msg.id || msg._id;
+      return msgId === messageId ? { ...msg, isDeleted: true } : msg;
+    }));
+  }, []);
+
+  // Socket event handlers - must be defined before the useEffect that uses them
+  const handleNewMessage = useCallback((data) => {
+    const channelId = activeChannel?.id || activeChannel?._id;
+    if (data.channelId === channelId) {
+      // Check if this is a confirmation of our optimistic message
+      if (data.tempId) {
+        // Replace optimistic message with confirmed one
+        setMessages(prev => prev.map(msg => 
+          (msg.id === data.tempId || msg._id === data.tempId) 
+            ? { ...data, isOptimistic: false } 
+            : msg
+        ));
+      } else if (data.sender?.uid !== user?.uid) {
+        // Only add if it's from another user (we already have our own messages)
+        setMessages(prev => [...prev, data]);
+      }
+    }
+    // Update channel's last message
+    setChannels(prev => prev.map(ch => {
+      const chId = ch.id || ch._id;
+      return chId === data.channelId 
+        ? { ...ch, lastMessage: { content: data.content, senderName: data.sender.name, timestamp: data.createdAt } }
+        : ch;
+    }));
+  }, [activeChannel, user]);
+
+  const handleChannelMessages = useCallback((data) => {
+    const channelId = activeChannel?.id || activeChannel?._id;
+    if (data.channelId === channelId) {
+      setMessages(data.messages);
+      setLoadingMessages(false);
+    }
+  }, [activeChannel]);
+
+  const handleNewChannel = useCallback(({ channel }) => {
+    setChannels(prev => [...prev, channel]);
+  }, []);
+
+  // Handle message confirmation from server - replace optimistic message with confirmed one
+  const handleMessageConfirmed = useCallback((data) => {
+    const channelId = activeChannel?.id || activeChannel?._id;
+    if (data.channelId === channelId && data.tempId) {
+      setMessages(prev => prev.map(msg => 
+        (msg.id === data.tempId || msg._id === data.tempId) 
+          ? { ...data, isOptimistic: false } 
+          : msg
+      ));
+    }
+  }, [activeChannel]);
+
+  const handleMessageEdited = useCallback(({ messageId, content, editedAt }) => {
+    setMessages(prev => prev.map(msg => {
+      const msgId = msg.id || msg._id;
+      return msgId === messageId ? { ...msg, content, isEdited: true, editedAt } : msg;
+    }));
+  }, []);
+
+  const handleMessageDeleted = useCallback(({ messageId }) => {
+    setMessages(prev => prev.filter(msg => {
+      const msgId = msg.id || msg._id;
+      return msgId !== messageId;
+    }));
+  }, []);
+
+  const handleReactionUpdated = useCallback(({ messageId, reactions }) => {
+    setMessages(prev => prev.map(msg => {
+      const msgId = msg.id || msg._id;
+      return msgId === messageId ? { ...msg, reactions } : msg;
+    }));
+  }, []);
 
   // Fetch channels on mount
   useEffect(() => {
@@ -48,6 +192,7 @@ export default function Community() {
     const unsubNewMessage = subscribe('new_message', handleNewMessage);
     const unsubChannelMessages = subscribe('channel_messages', handleChannelMessages);
     const unsubNewChannel = subscribe('new_channel', handleNewChannel);
+    const unsubMessageConfirmed = subscribe('message_confirmed', handleMessageConfirmed);
     const unsubMessageEdited = subscribe('message_edited', handleMessageEdited);
     const unsubMessageDeleted = subscribe('message_deleted', handleMessageDeleted);
     const unsubReactionUpdated = subscribe('message_reaction_updated', handleReactionUpdated);
@@ -56,17 +201,20 @@ export default function Community() {
       unsubNewMessage();
       unsubChannelMessages();
       unsubNewChannel();
+      unsubMessageConfirmed();
       unsubMessageEdited();
       unsubMessageDeleted();
       unsubReactionUpdated();
     };
-  }, [subscribe]);
+  }, [subscribe, handleNewMessage, handleChannelMessages, handleNewChannel, handleMessageConfirmed, handleMessageEdited, handleMessageDeleted, handleReactionUpdated]);
 
   // Join channel when selected
   useEffect(() => {
     if (activeChannel) {
-      joinChannel(activeChannel._id);
-      return () => leaveChannel(activeChannel._id);
+      const channelId = activeChannel.id || activeChannel._id;
+      setLoadingMessages(true);
+      joinChannel(channelId);
+      return () => leaveChannel(channelId);
     }
   }, [activeChannel, joinChannel, leaveChannel]);
 
@@ -86,49 +234,13 @@ export default function Community() {
     }
   };
 
-  // Socket event handlers
-  const handleNewMessage = useCallback((data) => {
-    if (data.channelId === activeChannel?._id) {
-      setMessages(prev => [...prev, data]);
-    }
-    // Update channel's last message
-    setChannels(prev => prev.map(ch => 
-      ch._id === data.channelId 
-        ? { ...ch, lastMessage: { content: data.content, senderName: data.sender.name, timestamp: data.createdAt } }
-        : ch
-    ));
-  }, [activeChannel]);
-
-  const handleChannelMessages = useCallback((data) => {
-    if (data.channelId === activeChannel?._id) {
-      setMessages(data.messages);
-    }
-  }, [activeChannel]);
-
-  const handleNewChannel = useCallback(({ channel }) => {
-    setChannels(prev => [...prev, channel]);
-  }, []);
-
-  const handleMessageEdited = useCallback(({ messageId, content, editedAt }) => {
-    setMessages(prev => prev.map(msg => 
-      msg._id === messageId ? { ...msg, content, isEdited: true, editedAt } : msg
-    ));
-  }, []);
-
-  const handleMessageDeleted = useCallback(({ messageId }) => {
-    setMessages(prev => prev.filter(msg => msg._id !== messageId));
-  }, []);
-
-  const handleReactionUpdated = useCallback(({ messageId, reactions }) => {
-    setMessages(prev => prev.map(msg => 
-      msg._id === messageId ? { ...msg, reactions } : msg
-    ));
-  }, []);
-
   const handleChannelSelect = (channel) => {
-    if (activeChannel?._id !== channel._id) {
+    const activeId = activeChannel?.id || activeChannel?._id;
+    const newId = channel.id || channel._id;
+    if (activeId !== newId) {
       setActiveChannel(channel);
       setMessages([]);
+      setLoadingMessages(true);
     }
   };
 
@@ -223,6 +335,11 @@ export default function Community() {
               channel={activeChannel}
               messages={messages}
               currentUser={user}
+              onOptimisticMessage={handleOptimisticMessage}
+              onOptimisticReaction={handleOptimisticReaction}
+              onOptimisticEdit={handleOptimisticEdit}
+              onOptimisticDelete={handleOptimisticDelete}
+              loading={loadingMessages}
             />
           ) : activeView === 'posts' ? (
             <PostsFeed />

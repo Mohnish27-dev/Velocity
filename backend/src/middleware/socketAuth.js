@@ -1,5 +1,17 @@
 import admin from 'firebase-admin';
 
+// Helper function to decode JWT payload without verification (for development only)
+const decodeTokenPayload = (token) => {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payload = Buffer.from(parts[1], 'base64').toString('utf8');
+    return JSON.parse(payload);
+  } catch {
+    return null;
+  }
+};
+
 // Socket.IO authentication middleware
 export const socketAuthMiddleware = async (socket, next) => {
   try {
@@ -20,16 +32,24 @@ export const socketAuthMiddleware = async (socket, next) => {
       };
       next();
     } catch (firebaseError) {
-      // Development mode bypass
-      if (process.env.NODE_ENV === 'development' && firebaseError.code === 'app/no-app') {
-        console.warn('Firebase Admin not configured, allowing socket connection in development mode');
-        socket.user = {
-          uid: 'dev-user',
-          email: 'dev@example.com',
-          name: 'Developer',
-          emailVerified: true
-        };
-        next();
+      // Development mode bypass - extract user info from token without verification
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('Firebase Admin verification failed, using token payload in development mode');
+        const tokenPayload = decodeTokenPayload(token);
+        
+        if (tokenPayload && tokenPayload.user_id) {
+          socket.user = {
+            uid: tokenPayload.user_id,
+            email: tokenPayload.email || 'unknown@example.com',
+            name: tokenPayload.name || tokenPayload.email?.split('@')[0] || 'User',
+            picture: tokenPayload.picture || null,
+            emailVerified: tokenPayload.email_verified || false
+          };
+          next();
+        } else {
+          console.error('Could not extract user info from token');
+          next(new Error('Invalid authentication token'));
+        }
       } else {
         console.error('Socket auth error:', firebaseError.message);
         next(new Error('Invalid authentication token'));

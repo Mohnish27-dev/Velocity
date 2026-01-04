@@ -25,8 +25,10 @@ import {
   // Presence
   getOnlineUsers,
   // Search
-  searchCommunity
-} from '../controllers/communityController.js';
+  searchCommunity,
+  // Utilities
+  fixPostLikeCounts
+} from '../controllers/communityFirebaseController.js';
 
 const router = express.Router();
 
@@ -63,5 +65,8 @@ router.get('/online-users', getOnlineUsers);
 
 // ============ SEARCH ROUTES ============
 router.get('/search', searchCommunity);
+
+// ============ UTILITY ROUTES ============
+router.post('/fix-likes', fixPostLikeCounts);
 
 export default router;

@@ -90,38 +90,42 @@ export default function ChannelList({
           {/* Channels in Category */}
           {expandedCategories[category] && (
             <div className="space-y-0.5 px-2">
-              {categoryChannels.map(channel => (
-                <button
-                  key={channel._id}
-                  onClick={() => onSelectChannel(channel)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
-                    activeChannel?._id === channel._id
-                      ? 'bg-indigo-50 text-indigo-600'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  {channel.type === 'private' ? (
-                    <Lock className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  ) : (
-                    <span className="text-base flex-shrink-0">{channel.icon || '💬'}</span>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1">
-                      <span className="font-medium truncate text-sm">{channel.name}</span>
-                    </div>
-                    {channel.lastMessage && (
-                      <p className="text-xs text-gray-400 truncate">
-                        {channel.lastMessage.senderName}: {channel.lastMessage.content}
-                      </p>
+              {categoryChannels.map(channel => {
+                const channelId = channel.id || channel._id;
+                const activeId = activeChannel?.id || activeChannel?._id;
+                return (
+                  <button
+                    key={channelId}
+                    onClick={() => onSelectChannel(channel)}
+                    className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors ${
+                      activeId === channelId
+                        ? 'bg-indigo-50 text-indigo-600'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {channel.type === 'private' ? (
+                      <Lock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    ) : (
+                      <span className="text-base flex-shrink-0">{channel.icon || '💬'}</span>
                     )}
-                  </div>
-                  {channel.memberCount > 0 && (
-                    <span className="text-xs text-gray-400 flex-shrink-0">
-                      {channel.memberCount}
-                    </span>
-                  )}
-                </button>
-              ))}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium truncate text-sm">{channel.name}</span>
+                      </div>
+                      {channel.lastMessage && (
+                        <p className="text-xs text-gray-400 truncate">
+                          {channel.lastMessage.senderName}: {channel.lastMessage.content}
+                        </p>
+                      )}
+                    </div>
+                    {channel.memberCount > 0 && (
+                      <span className="text-xs text-gray-400 flex-shrink-0">
+                        {channel.memberCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
