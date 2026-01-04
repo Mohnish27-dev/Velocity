@@ -24,8 +24,8 @@ import { errorHandler } from './middleware/errorHandler.js';
 // Import Socket.IO
 import { initializeSocket } from './config/socket.js';
 
-// Import community initializer
-import { initializeDefaultChannels } from './controllers/communityController.js';
+// Import community initializer (Firebase)
+import { initializeDefaultChannels } from './controllers/communityFirebaseController.js';
 
 // Import services
 import mongoose from 'mongoose';

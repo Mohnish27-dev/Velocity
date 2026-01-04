@@ -12,7 +12,7 @@ import {
 
 const EMOJI_LIST = ['👍', '❤️', '😂', '🎉', '🔥', '👏', '💯', '🚀', '✨', '🙌', '💪', '🤔'];
 
-export default function MessageInput({ channelId, channelName, onTyping, replyTo, onCancelReply }) {
+export default function MessageInput({ channelId, channelName, onTyping, replyTo, onCancelReply, onOptimisticMessage, currentUser }) {
   const { sendMessage, isConnected } = useSocket();
   const [content, setContent] = useState('');
   const [showEmoji, setShowEmoji] = useState(false);
@@ -30,11 +30,48 @@ export default function MessageInput({ channelId, channelName, onTyping, replyTo
       return;
     }
 
+    const messageContent = content.trim();
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Create optimistic message for immediate display
+    const optimisticMessage = {
+      id: tempId,
+      _id: tempId,
+      content: messageContent,
+      channelId,
+      sender: {
+        uid: currentUser?.uid,
+        name: currentUser?.displayName || currentUser?.name || 'You',
+        email: currentUser?.email,
+        avatar: currentUser?.photoURL || currentUser?.avatar || null
+      },
+      messageType: 'text',
+      attachments: attachments,
+      reactions: [],
+      replyTo: replyTo?._id || null,
+      replyToPreview: replyTo ? {
+        content: replyTo.content?.substring(0, 100),
+        senderName: replyTo.sender?.name
+      } : null,
+      isEdited: false,
+      isDeleted: false,
+      isPinned: false,
+      createdAt: new Date().toISOString(),
+      isOptimistic: true // Flag to identify optimistic messages
+    };
+
+    // Immediately show in UI
+    if (onOptimisticMessage) {
+      onOptimisticMessage(optimisticMessage);
+    }
+
+    // Send to server
     sendMessage({
       channelId,
-      content: content.trim(),
+      content: messageContent,
       replyTo: replyTo?._id,
-      attachments
+      attachments,
+      tempId // Send tempId so server can reference it
     });
 
     setContent('');

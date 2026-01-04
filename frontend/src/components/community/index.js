@@ -7,3 +7,4 @@ export { default as PostsFeed } from './PostsFeed';
 export { default as PostCard } from './PostCard';
 export { default as PostEditor } from './PostEditor';
 export { default as DirectMessages } from './DirectMessages';
+export { default as CommentSection } from './CommentSection';

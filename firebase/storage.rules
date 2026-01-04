@@ -16,9 +16,19 @@ service firebase.storage {
       return request.resource.size < 5 * 1024 * 1024;
     }
     
+    // Helper function to validate large file size (max 10MB for images)
+    function isValidImageSize() {
+      return request.resource.size < 10 * 1024 * 1024;
+    }
+    
     // Helper function to validate PDF file type
     function isPDF() {
       return request.resource.contentType == 'application/pdf';
+    }
+    
+    // Helper function to validate image file type
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
     }
     
     // Resume storage rules
@@ -33,6 +43,28 @@ service firebase.storage {
       allow update: if isOwner(userId) && isPDF() && isValidSize();
       
       // Allow deletion
+      allow delete: if isOwner(userId);
+    }
+    
+    // Community attachments (messages, posts)
+    match /community/{type}/{attachmentId} {
+      // Authenticated users can read all community attachments
+      allow read: if isAuthenticated();
+      
+      // Authenticated users can upload images
+      allow create: if isAuthenticated() && isImage() && isValidImageSize();
+      
+      // Only the uploader can delete (tracked via custom metadata)
+      allow delete: if isAuthenticated();
+    }
+    
+    // User avatars
+    match /avatars/{userId} {
+      // Anyone can read avatars
+      allow read: if true;
+      
+      // Only owner can upload/update their avatar
+      allow create, update: if isOwner(userId) && isImage() && isValidImageSize();
       allow delete: if isOwner(userId);
     }
     

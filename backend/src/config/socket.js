@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 import { socketAuthMiddleware } from '../middleware/socketAuth.js';
-import { setupSocketHandlers } from '../services/socketService.js';
+import { setupSocketHandlers } from '../services/socketServiceFirebase.js';
 import { presenceService } from '../services/presenceService.js';
 
 let io = null;

@@ -15,7 +15,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 const QUICK_REACTIONS = ['👍', '❤️', '😂', '🎉', '🔥', '👏'];
 
-export default function MessageBubble({ message, isOwn, showAvatar, channelId }) {
+export default function MessageBubble({ message, isOwn, showAvatar, channelId, onOptimisticReaction, onOptimisticEdit, onOptimisticDelete }) {
   const { addReaction, removeReaction, editMessage, deleteMessage } = useSocket();
   const { user } = useAuth();
   const [showActions, setShowActions] = useState(false);
@@ -25,28 +25,39 @@ export default function MessageBubble({ message, isOwn, showAvatar, channelId })
   const [copied, setCopied] = useState(false);
 
   const handleReaction = (emoji) => {
+    const messageId = message.id || message._id;
     const hasReacted = message.reactions?.some(
       r => r.emoji === emoji && r.users.some(u => u.uid === user?.uid)
     );
 
     if (hasReacted) {
-      removeReaction(message._id, emoji);
+      // Optimistic update - immediately show removal
+      onOptimisticReaction?.({ messageId, emoji, action: 'remove' });
+      removeReaction(messageId, emoji);
     } else {
-      addReaction(message._id, emoji);
+      // Optimistic update - immediately show addition
+      onOptimisticReaction?.({ messageId, emoji, action: 'add' });
+      addReaction(messageId, emoji);
     }
     setShowReactions(false);
   };
 
   const handleEdit = () => {
+    const messageId = message.id || message._id;
     if (editContent.trim() && editContent !== message.content) {
-      editMessage(message._id, editContent);
+      // Optimistic update - immediately show edited content
+      onOptimisticEdit?.({ messageId, content: editContent.trim() });
+      editMessage(messageId, editContent.trim());
     }
     setIsEditing(false);
   };
 
   const handleDelete = () => {
+    const messageId = message.id || message._id;
     if (confirm('Are you sure you want to delete this message?')) {
-      deleteMessage(message._id);
+      // Optimistic update - immediately show as deleted
+      onOptimisticDelete?.({ messageId });
+      deleteMessage(messageId);
     }
   };
 
