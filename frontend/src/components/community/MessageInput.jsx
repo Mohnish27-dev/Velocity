@@ -116,18 +116,18 @@ export default function MessageInput({ channelId, channelName, onTyping, replyTo
   };
 
   return (
-    <div className="border-t bg-white">
+    <div className="border-t border-neutral-800 bg-neutral-900">
       {/* Reply Preview */}
       {replyTo && (
-        <div className="px-4 py-2 bg-gray-50 border-b flex items-center gap-2">
+        <div className="px-4 py-2 bg-neutral-800/50 border-b border-neutral-800 flex items-center gap-2">
           <div className="flex-1 text-sm">
-            <span className="text-gray-500">Replying to </span>
-            <span className="font-medium text-gray-700">{replyTo.sender.name}</span>
-            <p className="text-gray-500 truncate">{replyTo.content}</p>
+            <span className="text-neutral-500">Replying to </span>
+            <span className="font-medium text-neutral-300">{replyTo.sender.name}</span>
+            <p className="text-neutral-500 truncate">{replyTo.content}</p>
           </div>
           <button 
             onClick={onCancelReply}
-            className="p-1 text-gray-400 hover:text-gray-600"
+            className="p-1 text-neutral-500 hover:text-neutral-300"
           >
             <X className="w-4 h-4" />
           </button>
@@ -136,18 +136,18 @@ export default function MessageInput({ channelId, channelName, onTyping, replyTo
 
       {/* Attachments Preview */}
       {attachments.length > 0 && (
-        <div className="px-4 py-2 border-b flex gap-2 flex-wrap">
+        <div className="px-4 py-2 border-b border-neutral-800 flex gap-2 flex-wrap">
           {attachments.map((file, index) => (
             <div 
               key={index}
-              className="relative group bg-gray-100 rounded-lg px-3 py-2 flex items-center gap-2"
+              className="relative group bg-neutral-800 rounded-lg px-3 py-2 flex items-center gap-2"
             >
               {file.type.startsWith('image/') ? (
-                <ImageIcon className="w-4 h-4 text-gray-500" />
+                <ImageIcon className="w-4 h-4 text-neutral-500" />
               ) : (
-                <Paperclip className="w-4 h-4 text-gray-500" />
+                <Paperclip className="w-4 h-4 text-neutral-500" />
               )}
-              <span className="text-sm text-gray-700 max-w-[150px] truncate">
+              <span className="text-sm text-neutral-300 max-w-[150px] truncate">
                 {file.name}
               </span>
               <button
@@ -176,7 +176,7 @@ export default function MessageInput({ channelId, channelName, onTyping, replyTo
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+            className="p-2 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800 rounded-lg"
           >
             <Paperclip className="w-5 h-5" />
           </button>
@@ -190,7 +190,7 @@ export default function MessageInput({ channelId, channelName, onTyping, replyTo
               onKeyDown={handleKeyDown}
               placeholder={`Message #${channelName}`}
               rows={1}
-              className="w-full px-4 py-2.5 pr-24 border rounded-xl resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 max-h-32"
+              className="w-full px-4 py-2.5 pr-24 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 resize-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 max-h-32"
               style={{ minHeight: '44px' }}
             />
             
@@ -202,7 +202,7 @@ export default function MessageInput({ channelId, channelName, onTyping, replyTo
                   type="button"
                   onClick={() => setShowEmoji(!showEmoji)}
                   className={`p-1.5 rounded-lg transition-colors ${
-                    showEmoji ? 'text-indigo-600 bg-indigo-50' : 'text-gray-400 hover:text-gray-600'
+                    showEmoji ? 'text-indigo-400 bg-indigo-500/20' : 'text-neutral-500 hover:text-neutral-300'
                   }`}
                 >
                   <Smile className="w-5 h-5" />
@@ -210,14 +210,14 @@ export default function MessageInput({ channelId, channelName, onTyping, replyTo
 
                 {/* Emoji Dropdown */}
                 {showEmoji && (
-                  <div className="absolute bottom-full right-0 mb-2 bg-white border rounded-xl shadow-lg p-2 w-64">
+                  <div className="absolute bottom-full right-0 mb-2 bg-neutral-800 border border-neutral-700 rounded-xl shadow-lg p-2 w-64">
                     <div className="grid grid-cols-6 gap-1">
                       {EMOJI_LIST.map(emoji => (
                         <button
                           key={emoji}
                           type="button"
                           onClick={() => insertEmoji(emoji)}
-                          className="p-2 text-xl hover:bg-gray-100 rounded-lg"
+                          className="p-2 text-xl hover:bg-neutral-700 rounded-lg"
                         >
                           {emoji}
                         </button>
@@ -230,7 +230,7 @@ export default function MessageInput({ channelId, channelName, onTyping, replyTo
               {/* Mention Button */}
               <button
                 type="button"
-                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg"
+                className="p-1.5 text-neutral-500 hover:text-neutral-300 rounded-lg"
               >
                 <AtSign className="w-5 h-5" />
               </button>
@@ -241,7 +241,7 @@ export default function MessageInput({ channelId, channelName, onTyping, replyTo
           <button
             type="submit"
             disabled={!content.trim() && attachments.length === 0}
-            className="p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-5 h-5" />
           </button>

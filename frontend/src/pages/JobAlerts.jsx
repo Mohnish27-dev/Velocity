@@ -11,11 +11,13 @@ import {
     Loader2,
     AlertCircle,
     Sparkles,
-    TrendingUp
+    TrendingUp,
+    Zap
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { jobAlertsApi, jobsApi } from '../services/api';
 import { JobAlertModal, JobAlertsList } from '../components';
+import Navbar from '../components/Navbar';
 
 export default function JobAlerts() {
     const [activeTab, setActiveTab] = useState('alerts'); // 'alerts' | 'search' | 'matches'
@@ -67,24 +69,36 @@ export default function JobAlerts() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-black">
+            <Navbar />
+            
+            {/* Background Effects */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+                <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl" />
+            </div>
+
             {/* Hero Section */}
-            <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white">
-                <div className="max-w-6xl mx-auto px-4 py-12">
-                    <div className="flex items-center justify-between">
+            <div className="relative pt-24 pb-8">
+                <div className="max-w-6xl mx-auto px-4">
+                    <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h1 className="text-3xl font-bold flex items-center gap-3">
-                                <Bell className="w-8 h-8" />
+                            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-sm mb-4">
+                                <Zap className="w-4 h-4" />
+                                Automated Job Notifications
+                            </div>
+                            <h1 className="text-4xl font-bold text-white flex items-center gap-3">
+                                <Bell className="w-10 h-10 text-purple-400" />
                                 Job Alerts
                             </h1>
-                            <p className="mt-2 text-indigo-100 max-w-xl">
+                            <p className="mt-3 text-neutral-400 max-w-xl">
                                 Set up personalized job alerts and never miss an opportunity.
                                 We'll email you when new jobs match your criteria.
                             </p>
                         </div>
                         <button
                             onClick={() => setIsModalOpen(true)}
-                            className="flex items-center gap-2 px-6 py-3 bg-white text-indigo-600 rounded-xl font-semibold hover:bg-indigo-50 transition-all shadow-lg"
+                            className="flex items-center gap-2 px-6 py-3 bg-white text-black rounded-xl font-semibold hover:bg-neutral-200 transition-all"
                         >
                             <Plus className="w-5 h-5" />
                             Create Alert
@@ -93,31 +107,26 @@ export default function JobAlerts() {
 
                     {/* Quick Stats */}
                     {stats && (
-                        <div className="grid grid-cols-4 gap-4 mt-8">
-                            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                                <div className="text-3xl font-bold">{stats.totalAlerts || 0}</div>
-                                <div className="text-indigo-100 text-sm">Total Alerts</div>
-                            </div>
-                            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                                <div className="text-3xl font-bold">{stats.activeAlerts || 0}</div>
-                                <div className="text-indigo-100 text-sm">Active Alerts</div>
-                            </div>
-                            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                                <div className="text-3xl font-bold">{stats.totalJobsFound || 0}</div>
-                                <div className="text-indigo-100 text-sm">Jobs Found</div>
-                            </div>
-                            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
-                                <div className="text-3xl font-bold">{stats.totalEmailsSent || 0}</div>
-                                <div className="text-indigo-100 text-sm">Emails Sent</div>
-                            </div>
+                        <div className="grid grid-cols-4 gap-4">
+                            {[
+                                { value: stats.totalAlerts || 0, label: 'Total Alerts', color: 'indigo' },
+                                { value: stats.activeAlerts || 0, label: 'Active Alerts', color: 'green' },
+                                { value: stats.totalJobsFound || 0, label: 'Jobs Found', color: 'purple' },
+                                { value: stats.totalEmailsSent || 0, label: 'Emails Sent', color: 'blue' }
+                            ].map((stat, idx) => (
+                                <div key={idx} className={`bg-neutral-900/50 border border-neutral-800 rounded-xl p-4 hover:border-${stat.color}-500/30 transition-colors`}>
+                                    <div className={`text-3xl font-bold text-white`}>{stat.value}</div>
+                                    <div className="text-neutral-500 text-sm">{stat.label}</div>
+                                </div>
+                            ))}
                         </div>
                     )}
                 </div>
             </div>
 
             {/* Tabs */}
-            <div className="max-w-6xl mx-auto px-4">
-                <div className="flex gap-2 -mt-5">
+            <div className="relative max-w-6xl mx-auto px-4">
+                <div className="flex gap-2">
                     {[
                         { id: 'alerts', label: 'My Alerts', icon: Bell },
                         { id: 'search', label: 'Search Jobs', icon: Search },
@@ -126,8 +135,8 @@ export default function JobAlerts() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-2 px-6 py-3 rounded-t-xl font-medium transition-all ${activeTab === tab.id
-                                    ? 'bg-white text-indigo-600 shadow-lg'
-                                    : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                                    ? 'bg-neutral-900 text-white border border-neutral-800 border-b-transparent'
+                                    : 'bg-neutral-800/50 text-neutral-400 hover:text-white border border-transparent'
                                 }`}
                         >
                             <tab.icon className="w-4 h-4" />
@@ -138,81 +147,85 @@ export default function JobAlerts() {
             </div>
 
             {/* Content */}
-            <div className="max-w-6xl mx-auto px-4 py-8">
-                {activeTab === 'alerts' && (
-                    <JobAlertsList />
-                )}
+            <div className="relative max-w-6xl mx-auto px-4 pb-8">
+                <div className="bg-neutral-900 border border-neutral-800 border-t-0 rounded-b-xl rounded-tr-xl p-6">
+                    {activeTab === 'alerts' && (
+                        <JobAlertsList />
+                    )}
 
-                {activeTab === 'search' && (
-                    <div className="space-y-6">
-                        {/* Search Form */}
-                        <div className="bg-white rounded-2xl shadow-sm border p-6">
-                            <form onSubmit={handleSearch} className="flex gap-4">
-                                <div className="flex-1 relative">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search jobs by title, skills, or company..."
-                                        className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    disabled={searchLoading}
-                                    className="px-6 py-3 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-                                >
-                                    {searchLoading ? (
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                    ) : (
-                                        <Search className="w-5 h-5" />
-                                    )}
-                                    Search
-                                </button>
-                            </form>
-
-                            {searchQuery && !searchLoading && (
-                                <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                                    <p className="text-sm text-gray-500">
-                                        Want to get notified about "{searchQuery}" jobs?
-                                    </p>
+                    {activeTab === 'search' && (
+                        <div className="space-y-6">
+                            {/* Search Form */}
+                            <div className="bg-neutral-800/50 border border-neutral-700 rounded-xl p-6">
+                                <form onSubmit={handleSearch} className="flex gap-4">
+                                    <div className="flex-1 relative">
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-500" />
+                                        <input
+                                            type="text"
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            placeholder="Search jobs by title, skills, or company..."
+                                            className="w-full pl-12 pr-4 py-3 bg-neutral-900 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                                        />
+                                    </div>
                                     <button
-                                        onClick={handleCreateAlertFromSearch}
-                                        className="text-sm text-indigo-600 font-medium hover:text-indigo-700 flex items-center gap-1"
+                                        type="submit"
+                                        disabled={searchLoading}
+                                        className="px-6 py-3 bg-white text-black rounded-xl font-medium hover:bg-neutral-200 transition-colors disabled:opacity-50 flex items-center gap-2"
                                     >
-                                        <Sparkles className="w-4 h-4" />
-                                        Create Alert
+                                        {searchLoading ? (
+                                            <Loader2 className="w-5 h-5 animate-spin" />
+                                        ) : (
+                                            <Search className="w-5 h-5" />
+                                        )}
+                                        Search
                                     </button>
+                                </form>
+
+                                {searchQuery && !searchLoading && (
+                                    <div className="mt-4 pt-4 border-t border-neutral-700 flex items-center justify-between">
+                                        <p className="text-sm text-neutral-500">
+                                            Want to get notified about "{searchQuery}" jobs?
+                                        </p>
+                                        <button
+                                            onClick={handleCreateAlertFromSearch}
+                                            className="text-sm text-indigo-400 font-medium hover:text-indigo-300 flex items-center gap-1"
+                                        >
+                                            <Sparkles className="w-4 h-4" />
+                                            Create Alert
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Search Results */}
+                            {searchResults.length > 0 && (
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-white">
+                                        Search Results ({searchResults.length} jobs)
+                                    </h3>
+                                    {searchResults.map((job, index) => (
+                                        <JobCard key={job.id || index} job={job} index={index} />
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Empty State */}
+                            {!searchLoading && searchResults.length === 0 && !searchQuery && (
+                                <div className="text-center py-16">
+                                    <div className="w-20 h-20 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Search className="w-10 h-10 text-neutral-600" />
+                                    </div>
+                                    <h3 className="text-lg font-medium text-white">Search for Jobs</h3>
+                                    <p className="text-neutral-500 mt-2 max-w-md mx-auto">
+                                        Enter a job title, skill, or company name to find matching opportunities.
+                                        You can then create an alert to get notified about new matches.
+                                    </p>
                                 </div>
                             )}
                         </div>
-
-                        {/* Search Results */}
-                        {searchResults.length > 0 && (
-                            <div className="space-y-4">
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                    Search Results ({searchResults.length} jobs)
-                                </h3>
-                                {searchResults.map((job, index) => (
-                                    <JobCard key={job.id || index} job={job} index={index} />
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Empty State */}
-                        {!searchLoading && searchResults.length === 0 && !searchQuery && (
-                            <div className="text-center py-16">
-                                <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                                <h3 className="text-lg font-medium text-gray-700">Search for Jobs</h3>
-                                <p className="text-gray-500 mt-2 max-w-md mx-auto">
-                                    Enter a job title, skill, or company name to find matching opportunities.
-                                    You can then create an alert to get notified about new matches.
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* Modal */}
@@ -244,7 +257,7 @@ function JobCard({ job, index }) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="bg-white rounded-xl border-2 border-gray-100 p-5 hover:shadow-md hover:border-indigo-100 transition-all"
+            className="bg-neutral-800/50 rounded-xl border border-neutral-700 p-5 hover:border-indigo-500/30 transition-all"
         >
             <div className="flex items-start gap-4">
                 {/* Company Logo or Initial */}
@@ -255,9 +268,9 @@ function JobCard({ job, index }) {
                 <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <span className="text-xs text-gray-400 font-medium">#{index + 1}</span>
-                            <h3 className="font-semibold text-gray-900 text-lg">{job.title}</h3>
-                            <p className="text-indigo-600 font-medium">{job.company}</p>
+                            <span className="text-xs text-neutral-600 font-medium">#{index + 1}</span>
+                            <h3 className="font-semibold text-white text-lg">{job.title}</h3>
+                            <p className="text-indigo-400 font-medium">{job.company}</p>
                         </div>
 
                         {/* Action Buttons */}
@@ -265,7 +278,7 @@ function JobCard({ job, index }) {
                             {job.applyLink && (
                                 <button
                                     onClick={handleApply}
-                                    className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors text-sm"
+                                    className="flex items-center gap-1.5 px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-neutral-200 transition-colors text-sm"
                                 >
                                     <ExternalLink className="w-4 h-4" />
                                     Apply
@@ -274,7 +287,7 @@ function JobCard({ job, index }) {
                             {job.recruiterEmail && (
                                 <button
                                     onClick={handleEmail}
-                                    className="flex items-center gap-1.5 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm"
+                                    className="flex items-center gap-1.5 px-4 py-2 bg-neutral-700 text-white rounded-lg font-medium hover:bg-neutral-600 transition-colors text-sm"
                                 >
                                     <Mail className="w-4 h-4" />
                                     Email
@@ -283,7 +296,7 @@ function JobCard({ job, index }) {
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-gray-500">
+                    <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-neutral-500">
                         <span className="flex items-center gap-1">
                             <MapPin className="w-4 h-4" />
                             {job.location || 'Remote'}
@@ -293,14 +306,14 @@ function JobCard({ job, index }) {
                             {job.employmentType || 'Full-time'}
                         </span>
                         {job.salary?.min && (
-                            <span className="text-green-600 font-medium">
+                            <span className="text-green-400 font-medium">
                                 ${job.salary.min.toLocaleString()} - ${job.salary.max?.toLocaleString() || '+'} / {job.salary.period || 'year'}
                             </span>
                         )}
                     </div>
 
                     {job.description && (
-                        <p className="mt-3 text-gray-600 text-sm line-clamp-2">
+                        <p className="mt-3 text-neutral-400 text-sm line-clamp-2">
                             {job.description.substring(0, 200)}...
                         </p>
                     )}

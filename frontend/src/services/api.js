@@ -144,6 +144,27 @@ export const resumeApi = {
       headers
     })
     return handleResponse(response)
+  },
+
+  // Download resume as PDF
+  async downloadPdf(resumeId, version = 'enhanced') {
+    const user = auth.currentUser
+    if (!user) throw new Error('Not authenticated')
+    
+    const token = await user.getIdToken()
+    const response = await fetch(`${API_BASE}/resumes/${resumeId}/download?version=${version}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.error || 'Failed to download PDF')
+    }
+    
+    return response.blob()
   }
 }
 

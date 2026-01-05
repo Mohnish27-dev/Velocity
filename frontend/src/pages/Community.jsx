@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import { communityApi } from '../services/api';
-import Layout from '../components/Layout';
+import Navbar from '../components/Navbar';
 import ChannelList from '../components/community/ChannelList';
 import ChatWindow from '../components/community/ChatWindow';
 import MembersList from '../components/community/MembersList';
@@ -16,7 +16,8 @@ import {
   Menu, 
   X,
   Plus,
-  Search
+  Search,
+  Hash
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -257,17 +258,18 @@ export default function Community() {
   };
 
   return (
-    <Layout>
-      <div className="h-[calc(100vh-64px)] flex bg-gray-50">
+    <div className="min-h-screen bg-black">
+      <Navbar />
+      <div className="h-[calc(100vh-64px)] flex pt-16">
         {/* Left Sidebar - Channels/Navigation */}
-        <div className={`${sidebarOpen ? 'w-64' : 'w-0'} bg-white border-r flex flex-col transition-all duration-300 overflow-hidden`}>
+        <div className={`${sidebarOpen ? 'w-64' : 'w-0'} bg-neutral-900 border-r border-neutral-800 flex flex-col transition-all duration-300 overflow-hidden`}>
           {/* View Tabs */}
-          <div className="p-3 border-b">
-            <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+          <div className="p-3 border-b border-neutral-800">
+            <div className="flex gap-1 bg-neutral-800 p-1 rounded-lg">
               <button
                 onClick={() => setActiveView('channels')}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                  activeView === 'channels' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                  activeView === 'channels' ? 'bg-neutral-700 text-white shadow-sm' : 'text-neutral-400 hover:text-white'
                 }`}
               >
                 <MessageSquare className="w-4 h-4" />
@@ -276,7 +278,7 @@ export default function Community() {
               <button
                 onClick={() => setActiveView('posts')}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                  activeView === 'posts' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                  activeView === 'posts' ? 'bg-neutral-700 text-white shadow-sm' : 'text-neutral-400 hover:text-white'
                 }`}
               >
                 <FileText className="w-4 h-4" />
@@ -285,7 +287,7 @@ export default function Community() {
               <button
                 onClick={() => setActiveView('dms')}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                  activeView === 'dms' ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                  activeView === 'dms' ? 'bg-neutral-700 text-white shadow-sm' : 'text-neutral-400 hover:text-white'
                 }`}
               >
                 <Mail className="w-4 h-4" />
@@ -295,11 +297,11 @@ export default function Community() {
           </div>
 
           {/* Connection Status */}
-          <div className="px-4 py-2 border-b">
+          <div className="px-4 py-2 border-b border-neutral-800">
             <div className="flex items-center gap-2 text-xs">
               <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`}></span>
-              <span className="text-gray-500">{isConnected ? 'Connected' : 'Disconnected'}</span>
-              <span className="text-gray-400 ml-auto">{onlineUsers.length} online</span>
+              <span className="text-neutral-500">{isConnected ? 'Connected' : 'Disconnected'}</span>
+              <span className="text-neutral-600 ml-auto">{onlineUsers.length} online</span>
             </div>
           </div>
 
@@ -323,13 +325,13 @@ export default function Community() {
         {/* Sidebar Toggle */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white border rounded-r-lg p-1.5 shadow-md hover:bg-gray-50 lg:hidden"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-neutral-800 border border-neutral-700 rounded-r-lg p-1.5 shadow-md hover:bg-neutral-700 lg:hidden"
         >
-          {sidebarOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          {sidebarOpen ? <X className="w-4 h-4 text-white" /> : <Menu className="w-4 h-4 text-white" />}
         </button>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 bg-black">
           {activeView === 'channels' && activeChannel ? (
             <ChatWindow
               channel={activeChannel}
@@ -344,17 +346,17 @@ export default function Community() {
           ) : activeView === 'posts' ? (
             <PostsFeed />
           ) : activeView === 'dms' ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="flex-1 flex items-center justify-center text-neutral-500">
               <div className="text-center">
-                <Mail className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>Select a conversation to start messaging</p>
+                <Mail className="w-12 h-12 mx-auto mb-3 text-neutral-700" />
+                <p className="text-neutral-400">Select a conversation to start messaging</p>
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="flex-1 flex items-center justify-center text-neutral-500">
               <div className="text-center">
-                <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>Select a channel to start chatting</p>
+                <MessageSquare className="w-12 h-12 mx-auto mb-3 text-neutral-700" />
+                <p className="text-neutral-400">Select a channel to start chatting</p>
               </div>
             </div>
           )}
@@ -362,7 +364,7 @@ export default function Community() {
 
         {/* Right Sidebar - Members */}
         {activeView === 'channels' && (
-          <div className={`${membersOpen ? 'w-60' : 'w-0'} bg-white border-l transition-all duration-300 overflow-hidden hidden lg:block`}>
+          <div className={`${membersOpen ? 'w-60' : 'w-0'} bg-neutral-900 border-l border-neutral-800 transition-all duration-300 overflow-hidden hidden lg:block`}>
             <MembersList
               channel={activeChannel}
               onlineUsers={onlineUsers}
@@ -374,9 +376,9 @@ export default function Community() {
         {activeView === 'channels' && (
           <button
             onClick={() => setMembersOpen(!membersOpen)}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white border rounded-l-lg p-1.5 shadow-md hover:bg-gray-50 hidden lg:block"
+            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-neutral-800 border border-neutral-700 rounded-l-lg p-1.5 shadow-md hover:bg-neutral-700 hidden lg:block"
           >
-            <Users className="w-4 h-4" />
+            <Users className="w-4 h-4 text-white" />
           </button>
         )}
 
@@ -388,7 +390,7 @@ export default function Community() {
           />
         )}
       </div>
-    </Layout>
+    </div>
   );
 }
 
@@ -419,18 +421,21 @@ function CreateChannelModal({ onClose, onCreate }) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-neutral-900 border border-neutral-800 rounded-xl shadow-xl max-w-md w-full p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Create Channel</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+            <Hash className="w-5 h-5 text-indigo-400" />
+            Create Channel
+          </h2>
+          <button onClick={onClose} className="text-neutral-500 hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-neutral-400 mb-1">
               Channel Name
             </label>
             <input
@@ -438,13 +443,13 @@ function CreateChannelModal({ onClose, onCreate }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., frontend-devs"
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-neutral-400 mb-1">
               Description
             </label>
             <textarea
@@ -452,18 +457,18 @@ function CreateChannelModal({ onClose, onCreate }) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="What's this channel about?"
               rows={2}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-neutral-400 mb-1">
               Category
             </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full px-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
             >
               {categories.map(cat => (
                 <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -472,7 +477,7 @@ function CreateChannelModal({ onClose, onCreate }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-neutral-400 mb-2">
               Visibility
             </label>
             <div className="flex gap-4">
@@ -483,9 +488,9 @@ function CreateChannelModal({ onClose, onCreate }) {
                   value="public"
                   checked={type === 'public'}
                   onChange={(e) => setType(e.target.value)}
-                  className="text-indigo-600"
+                  className="text-indigo-500"
                 />
-                <span className="text-sm">Public</span>
+                <span className="text-sm text-neutral-300">Public</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -494,9 +499,9 @@ function CreateChannelModal({ onClose, onCreate }) {
                   value="private"
                   checked={type === 'private'}
                   onChange={(e) => setType(e.target.value)}
-                  className="text-indigo-600"
+                  className="text-indigo-500"
                 />
-                <span className="text-sm">Private</span>
+                <span className="text-sm text-neutral-300">Private</span>
               </label>
             </div>
           </div>
@@ -505,14 +510,14 @@ function CreateChannelModal({ onClose, onCreate }) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50"
+              className="flex-1 px-4 py-2 border border-neutral-700 rounded-lg text-neutral-300 hover:bg-neutral-800 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || !name.trim()}
-              className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+              className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-neutral-200 font-medium disabled:opacity-50 transition-colors"
             >
               {loading ? 'Creating...' : 'Create Channel'}
             </button>

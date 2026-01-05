@@ -77,7 +77,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, channelId, o
     return (
       <div className={`flex gap-3 ${isOwn ? 'flex-row-reverse' : ''}`}>
         <div className="w-8" />
-        <div className="bg-gray-100 rounded-lg px-4 py-2 text-gray-400 italic text-sm">
+        <div className="bg-neutral-800 rounded-lg px-4 py-2 text-neutral-500 italic text-sm">
           This message was deleted
         </div>
       </div>
@@ -86,7 +86,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, channelId, o
 
   return (
     <div 
-      className={`group flex gap-3 hover:bg-gray-100/50 -mx-2 px-2 py-1 rounded-lg ${
+      className={`group flex gap-3 hover:bg-neutral-800/50 -mx-2 px-2 py-1 rounded-lg ${
         isOwn ? 'flex-row-reverse' : ''
       }`}
       onMouseEnter={() => setShowActions(true)}
@@ -116,17 +116,17 @@ export default function MessageBubble({ message, isOwn, showAvatar, channelId, o
       <div className={`flex-1 min-w-0 ${isOwn ? 'text-right' : ''}`}>
         {showAvatar && (
           <div className={`flex items-baseline gap-2 mb-0.5 ${isOwn ? 'flex-row-reverse' : ''}`}>
-            <span className="font-medium text-sm text-gray-900">
+            <span className="font-medium text-sm text-white">
               {message.sender.name}
             </span>
-            <span className="text-xs text-gray-400">{formattedTime}</span>
+            <span className="text-xs text-neutral-500">{formattedTime}</span>
           </div>
         )}
 
         {/* Reply Preview */}
         {message.replyToPreview && (
           <div className={`mb-1 ${isOwn ? 'ml-auto' : 'mr-auto'} max-w-sm`}>
-            <div className="text-xs text-gray-500 bg-gray-100 rounded px-2 py-1 border-l-2 border-indigo-400">
+            <div className="text-xs text-neutral-400 bg-neutral-800 rounded px-2 py-1 border-l-2 border-indigo-400">
               <span className="font-medium">{message.replyToPreview.senderName}</span>
               <p className="truncate">{message.replyToPreview.content}</p>
             </div>
@@ -142,7 +142,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, channelId, o
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleEdit()}
-                className="flex-1 px-3 py-1.5 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                className="flex-1 px-3 py-1.5 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white focus:ring-2 focus:ring-indigo-500"
                 autoFocus
               />
               <button
@@ -153,7 +153,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, channelId, o
               </button>
               <button
                 onClick={() => setIsEditing(false)}
-                className="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg text-sm"
+                className="px-3 py-1 bg-neutral-700 text-neutral-300 rounded-lg text-sm"
               >
                 Cancel
               </button>
@@ -163,14 +163,14 @@ export default function MessageBubble({ message, isOwn, showAvatar, channelId, o
               className={`rounded-2xl px-4 py-2 max-w-lg ${
                 isOwn 
                   ? 'bg-indigo-600 text-white rounded-br-md' 
-                  : 'bg-white border rounded-bl-md'
+                  : 'bg-neutral-800 border border-neutral-700 text-white rounded-bl-md'
               }`}
             >
               <p className="whitespace-pre-wrap break-words text-sm">
                 {message.content}
               </p>
               {message.isEdited && (
-                <span className={`text-xs ${isOwn ? 'text-indigo-200' : 'text-gray-400'}`}>
+                <span className={`text-xs ${isOwn ? 'text-indigo-200' : 'text-neutral-500'}`}>
                   (edited)
                 </span>
               )}
@@ -193,7 +193,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, channelId, o
                       href={attachment.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg text-sm text-gray-700 hover:bg-gray-200"
+                      className="flex items-center gap-2 px-3 py-2 bg-neutral-800 rounded-lg text-sm text-neutral-300 hover:bg-neutral-700"
                     >
                       📎 {attachment.name}
                     </a>
@@ -212,8 +212,8 @@ export default function MessageBubble({ message, isOwn, showAvatar, channelId, o
                   onClick={() => handleReaction(reaction.emoji)}
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors ${
                     reaction.users.some(u => u.uid === user?.uid)
-                      ? 'bg-indigo-100 text-indigo-700 border border-indigo-300'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/50'
+                      : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
                   }`}
                 >
                   <span>{reaction.emoji}</span>
@@ -228,23 +228,23 @@ export default function MessageBubble({ message, isOwn, showAvatar, channelId, o
             <div 
               className={`absolute ${isOwn ? 'left-0 -translate-x-full' : 'right-0 translate-x-full'} top-0 px-2`}
             >
-              <div className="flex items-center gap-1 bg-white border rounded-lg shadow-sm p-1">
+              <div className="flex items-center gap-1 bg-neutral-800 border border-neutral-700 rounded-lg shadow-sm p-1">
                 {/* Quick Reaction */}
                 <div className="relative">
                   <button
                     onClick={() => setShowReactions(!showReactions)}
-                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                    className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-700 rounded"
                   >
                     <Smile className="w-4 h-4" />
                   </button>
 
                   {showReactions && (
-                    <div className="absolute bottom-full mb-1 left-0 bg-white border rounded-lg shadow-lg p-1 flex gap-1">
+                    <div className="absolute bottom-full mb-1 left-0 bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg p-1 flex gap-1">
                       {QUICK_REACTIONS.map(emoji => (
                         <button
                           key={emoji}
                           onClick={() => handleReaction(emoji)}
-                          className="p-1 hover:bg-gray-100 rounded text-lg"
+                          className="p-1 hover:bg-neutral-700 rounded text-lg"
                         >
                           {emoji}
                         </button>
@@ -254,14 +254,14 @@ export default function MessageBubble({ message, isOwn, showAvatar, channelId, o
                 </div>
 
                 {/* Reply */}
-                <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded">
+                <button className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-700 rounded">
                   <Reply className="w-4 h-4" />
                 </button>
 
                 {/* Copy */}
                 <button 
                   onClick={handleCopy}
-                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                  className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-700 rounded"
                 >
                   {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
                 </button>
@@ -271,13 +271,13 @@ export default function MessageBubble({ message, isOwn, showAvatar, channelId, o
                   <>
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded"
+                      className="p-1.5 text-neutral-400 hover:text-white hover:bg-neutral-700 rounded"
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={handleDelete}
-                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                      className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

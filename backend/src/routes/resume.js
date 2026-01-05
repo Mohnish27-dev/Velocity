@@ -168,4 +168,110 @@ router.delete('/:resumeId', verifyToken, asyncHandler(async (req, res) => {
   });
 }));
 
+// Download resume as PDF
+router.get('/:resumeId/download', verifyToken, asyncHandler(async (req, res) => {
+  const { resumeId } = req.params;
+  const userId = req.user.uid;
+  const { version = 'enhanced' } = req.query; // 'enhanced' or 'original'
+
+  const resume = await Resume.findById(resumeId).lean();
+
+  if (!resume) {
+    throw new ApiError(404, 'Resume not found');
+  }
+
+  if (resume.userId !== userId) {
+    throw new ApiError(403, 'Access denied');
+  }
+
+  const PDFDocument = (await import('pdfkit')).default;
+  
+  // Get the text content based on version
+  const textContent = version === 'enhanced' && resume.enhancedText 
+    ? resume.enhancedText 
+    : resume.originalText;
+
+  if (!textContent) {
+    throw new ApiError(400, 'No content available for download');
+  }
+
+  // Create PDF document
+  const doc = new PDFDocument({
+    size: 'A4',
+    margins: { top: 50, bottom: 50, left: 50, right: 50 }
+  });
+
+  // Set response headers for PDF download
+  const filename = `${resume.title || 'resume'}_${version}.pdf`.replace(/[^a-zA-Z0-9_.-]/g, '_');
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+  // Pipe the PDF to the response
+  doc.pipe(res);
+
+  // Parse markdown-like content and render to PDF
+  const lines = textContent.split('\n');
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    
+    if (!trimmedLine) {
+      doc.moveDown(0.5);
+      continue;
+    }
+
+    // Handle headers (markdown style)
+    if (trimmedLine.startsWith('### ')) {
+      doc.fontSize(12).font('Helvetica-Bold').text(trimmedLine.replace('### ', ''), { continued: false });
+      doc.moveDown(0.3);
+    } else if (trimmedLine.startsWith('## ')) {
+      doc.fontSize(14).font('Helvetica-Bold').text(trimmedLine.replace('## ', ''), { continued: false });
+      doc.moveDown(0.3);
+    } else if (trimmedLine.startsWith('# ')) {
+      doc.fontSize(18).font('Helvetica-Bold').text(trimmedLine.replace('# ', ''), { continued: false });
+      doc.moveDown(0.5);
+    } else if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+      // Bold text
+      doc.fontSize(11).font('Helvetica-Bold').text(trimmedLine.replace(/\*\*/g, ''), { continued: false });
+    } else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+      // Bullet points
+      doc.fontSize(11).font('Helvetica').text(`• ${trimmedLine.substring(2)}`, { 
+        indent: 20,
+        continued: false 
+      });
+    } else if (/^\d+\.\s/.test(trimmedLine)) {
+      // Numbered lists
+      doc.fontSize(11).font('Helvetica').text(trimmedLine, { 
+        indent: 20,
+        continued: false 
+      });
+    } else {
+      // Regular text - handle inline bold
+      const parts = trimmedLine.split(/(\*\*[^*]+\*\*)/);
+      let isFirst = true;
+      
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        if (!part) continue;
+        
+        const isLast = i === parts.length - 1;
+        
+        if (part.startsWith('**') && part.endsWith('**')) {
+          doc.fontSize(11).font('Helvetica-Bold').text(part.replace(/\*\*/g, ''), { continued: !isLast });
+        } else {
+          doc.fontSize(11).font('Helvetica').text(part, { continued: !isLast });
+        }
+        isFirst = false;
+      }
+      
+      if (isFirst) {
+        doc.fontSize(11).font('Helvetica').text(trimmedLine, { continued: false });
+      }
+    }
+  }
+
+  // Finalize PDF
+  doc.end();
+}));
+
 export default router;

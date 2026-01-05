@@ -204,14 +204,14 @@ export default function PostsFeed() {
     : posts;
 
   return (
-    <div className="h-full flex flex-col bg-gray-50">
+    <div className="h-full flex flex-col bg-neutral-900">
       {/* Header */}
-      <div className="bg-white border-b px-6 py-4">
+      <div className="bg-neutral-900 border-b border-neutral-800 px-6 py-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-gray-900">Community Discussions</h2>
+          <h2 className="text-xl font-bold text-white">Community Discussions</h2>
           <button
             onClick={() => setShowEditor(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors"
           >
             <Plus className="w-4 h-4" />
             New Post
@@ -221,11 +221,11 @@ export default function PostsFeed() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3 items-center">
           {/* Sort Options */}
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+          <div className="flex gap-1 bg-neutral-800 p-1 rounded-lg">
             <button
               onClick={() => setSortBy('latest')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                sortBy === 'latest' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-600 hover:text-gray-900'
+                sortBy === 'latest' ? 'bg-neutral-700 shadow-sm text-indigo-400' : 'text-neutral-400 hover:text-white'
               }`}
             >
               <Clock className="w-4 h-4" />
@@ -234,7 +234,7 @@ export default function PostsFeed() {
             <button
               onClick={() => setSortBy('popular')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                sortBy === 'popular' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-600 hover:text-gray-900'
+                sortBy === 'popular' ? 'bg-neutral-700 shadow-sm text-indigo-400' : 'text-neutral-400 hover:text-white'
               }`}
             >
               <Heart className="w-4 h-4" />
@@ -243,7 +243,7 @@ export default function PostsFeed() {
             <button
               onClick={() => setSortBy('trending')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                sortBy === 'trending' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-600 hover:text-gray-900'
+                sortBy === 'trending' ? 'bg-neutral-700 shadow-sm text-indigo-400' : 'text-neutral-400 hover:text-white'
               }`}
             >
               <TrendingUp className="w-4 h-4" />
@@ -253,18 +253,18 @@ export default function PostsFeed() {
 
           {/* Search */}
           <div className="relative flex-1 min-w-[200px] max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search posts..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className="w-full pl-10 pr-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-sm text-white placeholder-neutral-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -280,8 +280,8 @@ export default function PostsFeed() {
               onClick={() => setSelectedCategory(cat.value)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
                 selectedCategory === cat.value
-                  ? 'bg-indigo-100 text-indigo-700 font-medium'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-indigo-500/20 text-indigo-400 font-medium'
+                  : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
               }`}
             >
               <span>{cat.icon}</span>
@@ -296,18 +296,18 @@ export default function PostsFeed() {
         <div className="max-w-3xl mx-auto space-y-4">
           {loading ? (
             [...Array(3)].map((_, i) => (
-              <div key={i} className="bg-white rounded-xl p-6 animate-pulse">
+              <div key={i} className="bg-neutral-800 border border-neutral-700 rounded-xl p-6 animate-pulse">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                  <div className="w-10 h-10 bg-neutral-700 rounded-full" />
                   <div className="space-y-2">
-                    <div className="w-32 h-4 bg-gray-200 rounded" />
-                    <div className="w-24 h-3 bg-gray-200 rounded" />
+                    <div className="w-32 h-4 bg-neutral-700 rounded" />
+                    <div className="w-24 h-3 bg-neutral-700 rounded" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <div className="w-3/4 h-5 bg-gray-200 rounded" />
-                  <div className="w-full h-4 bg-gray-200 rounded" />
-                  <div className="w-2/3 h-4 bg-gray-200 rounded" />
+                  <div className="w-3/4 h-5 bg-neutral-700 rounded" />
+                  <div className="w-full h-4 bg-neutral-700 rounded" />
+                  <div className="w-2/3 h-4 bg-neutral-700 rounded" />
                 </div>
               </div>
             ))
@@ -338,7 +338,7 @@ export default function PostsFeed() {
               {hasMore && (
                 <button
                   onClick={() => fetchPosts(true)}
-                  className="w-full py-3 text-indigo-600 hover:text-indigo-700 font-medium"
+                  className="w-full py-3 text-indigo-400 hover:text-indigo-300 font-medium"
                 >
                   Load more posts
                 </button>
@@ -347,11 +347,11 @@ export default function PostsFeed() {
           ) : (
             <div className="text-center py-12">
               <p className="text-4xl mb-3">📝</p>
-              <h3 className="text-lg font-medium text-gray-900">No posts yet</h3>
-              <p className="text-gray-500 mt-1">Be the first to share your thoughts!</p>
+              <h3 className="text-lg font-medium text-white">No posts yet</h3>
+              <p className="text-neutral-500 mt-1">Be the first to share your thoughts!</p>
               <button
                 onClick={() => setShowEditor(true)}
-                className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500"
               >
                 Create Post
               </button>

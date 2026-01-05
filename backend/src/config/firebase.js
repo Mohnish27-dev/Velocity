@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 import dotenv from 'dotenv';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -22,29 +22,64 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
   try {
     // Resolve path relative to backend folder
     const serviceAccountPath = join(__dirname, '../../', process.env.FIREBASE_SERVICE_ACCOUNT_PATH);
-    const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
     
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      storageBucket: firebaseConfig.storageBucket
-    });
-    initialized = true;
-    console.log('✅ Firebase Admin SDK initialized with service account');
+    // Check if file exists before trying to read it
+    if (existsSync(serviceAccountPath)) {
+      const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+      
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        storageBucket: firebaseConfig.storageBucket
+      });
+      initialized = true;
+      console.log('✅ Firebase Admin SDK initialized with service account');
+    } else {
+      console.warn('⚠️  Service account file not found at:', serviceAccountPath);
+      console.warn('   Please download it from Firebase Console > Project Settings > Service Accounts');
+    }
   } catch (error) {
     console.error('❌ Failed to load service account:', error.message);
   }
 }
 
 if (!initialized) {
-  // Initialize without credentials for development
+  // Check for GOOGLE_APPLICATION_CREDENTIALS environment variable
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    try {
+      admin.initializeApp({
+        credential: admin.credential.applicationDefault(),
+        storageBucket: firebaseConfig.storageBucket
+      });
+      initialized = true;
+      console.log('✅ Firebase Admin SDK initialized with application default credentials');
+    } catch (error) {
+      console.warn('Failed to use application default credentials:', error.message);
+    }
+  }
+}
+
+if (!initialized) {
+  // Initialize without credentials - will fail on Firestore operations
+  console.error('');
+  console.error('╔════════════════════════════════════════════════════════════════╗');
+  console.error('║  ❌ FIREBASE SERVICE ACCOUNT NOT CONFIGURED                    ║');
+  console.error('║                                                                ║');
+  console.error('║  To fix this:                                                  ║');
+  console.error('║  1. Go to Firebase Console → Project Settings                  ║');
+  console.error('║  2. Click "Service accounts" tab                               ║');
+  console.error('║  3. Click "Generate new private key"                           ║');
+  console.error('║  4. Save as: backend/serviceAccountKey.json                    ║');
+  console.error('╚════════════════════════════════════════════════════════════════╝');
+  console.error('');
+  
+  // Initialize anyway to prevent crashes, but operations will fail
   try {
     admin.initializeApp({
       projectId: firebaseConfig.projectId,
       storageBucket: firebaseConfig.storageBucket
     });
-    console.log('⚠️  Firebase Admin SDK initialized without credentials (development mode)');
   } catch (error) {
-    console.warn('Firebase Admin SDK initialization warning:', error.message);
+    // Already initialized or other error
   }
 }
 

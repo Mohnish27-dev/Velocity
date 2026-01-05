@@ -93,11 +93,11 @@ export default function DirectMessages() {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b flex items-center justify-between">
-        <h3 className="font-semibold text-gray-900">Direct Messages</h3>
+      <div className="p-4 border-b border-neutral-800 flex items-center justify-between">
+        <h3 className="font-semibold text-white">Direct Messages</h3>
         <button
           onClick={() => setShowNewDM(true)}
-          className="p-1.5 text-indigo-600 hover:bg-indigo-50 rounded-lg"
+          className="p-1.5 text-indigo-400 hover:bg-indigo-500/20 rounded-lg"
         >
           <Plus className="w-5 h-5" />
         </button>
@@ -109,10 +109,10 @@ export default function DirectMessages() {
           <div className="p-4 space-y-3">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="animate-pulse flex gap-3">
-                <div className="w-10 h-10 bg-gray-200 rounded-full" />
+                <div className="w-10 h-10 bg-neutral-800 rounded-full" />
                 <div className="flex-1 space-y-2">
-                  <div className="w-24 h-4 bg-gray-200 rounded" />
-                  <div className="w-32 h-3 bg-gray-200 rounded" />
+                  <div className="w-24 h-4 bg-neutral-800 rounded" />
+                  <div className="w-32 h-3 bg-neutral-800 rounded" />
                 </div>
               </div>
             ))}
@@ -130,8 +130,8 @@ export default function DirectMessages() {
                 <button
                   key={convId}
                   onClick={() => handleSelectConversation(conv)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${
-                    selectedId === convId ? 'bg-indigo-50' : ''
+                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-neutral-800 transition-colors ${
+                    selectedId === convId ? 'bg-indigo-500/20' : ''
                   }`}
                 >
                   {/* Avatar with online status */}
@@ -148,24 +148,24 @@ export default function DirectMessages() {
                       )}
                     </div>
                     <span 
-                      className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
-                        isOnline ? 'bg-green-500' : 'bg-gray-400'
+                      className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-neutral-900 ${
+                        isOnline ? 'bg-green-500' : 'bg-neutral-600'
                       }`}
                     />
                   </div>
 
                   <div className="flex-1 min-w-0 text-left">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-900 truncate">
+                      <span className="font-medium text-white truncate">
                         {otherUser?.name}
                       </span>
                       {conv.lastMessage?.timestamp && (
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-neutral-500">
                           {formatDistanceToNow(new Date(conv.lastMessage.timestamp), { addSuffix: false })}
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 truncate">
+                    <p className="text-sm text-neutral-500 truncate">
                       {conv.lastMessage?.senderId === user?.uid && 'You: '}
                       {conv.lastMessage?.content || 'No messages yet'}
                     </p>
@@ -182,11 +182,11 @@ export default function DirectMessages() {
             })}
           </div>
         ) : (
-          <div className="p-6 text-center text-gray-500">
+          <div className="p-6 text-center text-neutral-500">
             <p className="text-sm">No conversations yet</p>
             <button
               onClick={() => setShowNewDM(true)}
-              className="mt-2 text-indigo-600 hover:text-indigo-700 text-sm font-medium"
+              className="mt-2 text-indigo-400 hover:text-indigo-300 text-sm font-medium"
             >
               Start a conversation
             </button>
@@ -196,13 +196,13 @@ export default function DirectMessages() {
 
       {/* New DM Modal */}
       {showNewDM && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="font-semibold">New Message</h3>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl shadow-xl max-w-md w-full">
+            <div className="flex items-center justify-between p-4 border-b border-neutral-800">
+              <h3 className="font-semibold text-white">New Message</h3>
               <button
                 onClick={() => setShowNewDM(false)}
-                className="p-1 text-gray-400 hover:text-gray-600"
+                className="p-1 text-neutral-500 hover:text-neutral-300"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -211,19 +211,19 @@ export default function DirectMessages() {
             <div className="p-4">
               {/* Search */}
               <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search users..."
-                  className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  className="w-full pl-10 pr-4 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-indigo-500"
                 />
               </div>
 
               {/* Online Users */}
               <div className="max-h-64 overflow-y-auto">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+                <p className="text-xs font-medium text-neutral-500 uppercase tracking-wider mb-2">
                   Online Users
                 </p>
                 {filteredUsers.length > 0 ? (
@@ -232,7 +232,7 @@ export default function DirectMessages() {
                       <button
                         key={u.uid}
                         onClick={() => handleStartConversation(u)}
-                        className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 rounded-lg"
+                        className="w-full flex items-center gap-3 px-3 py-2 hover:bg-neutral-800 rounded-lg"
                       >
                         <div className="relative">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-xs font-medium">
@@ -240,12 +240,12 @@ export default function DirectMessages() {
                           </div>
                           <Circle className="absolute -bottom-0.5 -right-0.5 w-3 h-3 text-green-500 fill-green-500" />
                         </div>
-                        <span className="font-medium text-gray-900">{u.name}</span>
+                        <span className="font-medium text-white">{u.name}</span>
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500 text-center py-4">
+                  <p className="text-sm text-neutral-500 text-center py-4">
                     No users found
                   </p>
                 )}

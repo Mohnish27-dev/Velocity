@@ -12,7 +12,6 @@ import Upload from './pages/Upload'
 import Enhance from './pages/Enhance'
 import ResumeView from './pages/ResumeView'
 import JobSearch from './pages/JobSearch'
-import JobTracker from './pages/JobTracker'
 import JobAlerts from './pages/JobAlerts'
 import Community from './pages/Community'
 
@@ -22,10 +21,10 @@ function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="w-12 h-12 border-4 border-neutral-800 border-t-indigo-500 rounded-full animate-spin"></div>
+          <p className="text-neutral-400">Loading...</p>
         </div>
       </div>
     )
@@ -44,10 +43,10 @@ function PublicRoute({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-          <p className="text-gray-600">Loading...</p>
+          <div className="w-12 h-12 border-4 border-neutral-800 border-t-indigo-500 rounded-full animate-spin"></div>
+          <p className="text-neutral-400">Loading...</p>
         </div>
       </div>
     )
@@ -70,9 +69,10 @@ function App() {
             toastOptions={{
               duration: 3000,
               style: {
-                background: '#363636',
+                background: '#171717',
                 color: '#fff',
-                borderRadius: '10px',
+                borderRadius: '12px',
+                border: '1px solid #262626',
               },
               success: {
                 iconTheme: {
@@ -100,7 +100,6 @@ function App() {
             <Route path="/enhance/:resumeId" element={<ProtectedRoute><Enhance /></ProtectedRoute>} />
             <Route path="/resume/:resumeId" element={<ProtectedRoute><ResumeView /></ProtectedRoute>} />
             <Route path="/jobs" element={<ProtectedRoute><JobSearch /></ProtectedRoute>} />
-            <Route path="/job-tracker" element={<ProtectedRoute><JobTracker /></ProtectedRoute>} />
             <Route path="/job-alerts" element={<ProtectedRoute><JobAlerts /></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
 

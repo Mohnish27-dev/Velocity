@@ -97,103 +97,131 @@ export default function Enhance() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-black">
         <Navbar />
         <div className="flex items-center justify-center py-20">
-          <p className="text-gray-600">Loading resume...</p>
+          <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-black">
       <Navbar />
       
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">Enhance Resume</h1>
-          <p className="text-gray-600">{resume?.title}</p>
+          <h1 className="text-2xl font-bold text-white">Enhance Resume</h1>
+          <p className="text-neutral-400">{resume?.title}</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Original Text */}
-          <Card>
-            <h2 className="text-lg font-medium mb-4">Original Resume</h2>
-            <div className="bg-gray-50 rounded-md p-4 h-96 overflow-auto">
-              <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono">
+          <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6">
+            <h2 className="text-lg font-medium text-white mb-4">Original Resume</h2>
+            <div className="bg-neutral-800 rounded-lg p-4 h-96 overflow-auto">
+              <pre className="whitespace-pre-wrap text-sm text-neutral-300 font-mono">
                 {resume?.originalText}
               </pre>
             </div>
-          </Card>
+          </div>
 
           {/* Enhancement Options */}
-          <Card>
-            <h2 className="text-lg font-medium mb-4">Enhancement Settings</h2>
+          <div className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-6">
+            <h2 className="text-lg font-medium text-white mb-4">Enhancement Settings</h2>
             
-            <Input
-              label="Target Job Role"
-              name="jobRole"
-              value={preferences.jobRole}
-              onChange={handlePreferenceChange}
-              placeholder="e.g., Senior Software Engineer"
-              required
-            />
-            
-            <Input
-              label="Years of Experience"
-              type="number"
-              name="yearsOfExperience"
-              value={preferences.yearsOfExperience}
-              onChange={handlePreferenceChange}
-              placeholder="e.g., 5"
-            />
-            
-            <Input
-              label="Key Skills (comma separated)"
-              name="skills"
-              value={preferences.skills}
-              onChange={handlePreferenceChange}
-              placeholder="e.g., React, Node.js, TypeScript"
-            />
-            
-            <Input
-              label="Industry"
-              name="industry"
-              value={preferences.industry}
-              onChange={handlePreferenceChange}
-              placeholder="e.g., Technology, Finance, Healthcare"
-            />
-            
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Custom Instructions (optional)
-              </label>
-              <textarea
-                name="customInstructions"
-                value={preferences.customInstructions}
-                onChange={handlePreferenceChange}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Any specific instructions for the AI..."
-              />
-            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-1.5">
+                  Target Job Role <span className="text-red-400">*</span>
+                </label>
+                <input
+                  name="jobRole"
+                  value={preferences.jobRole}
+                  onChange={handlePreferenceChange}
+                  placeholder="e.g., Senior Software Engineer"
+                  className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  required
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-1.5">
+                  Years of Experience
+                </label>
+                <input
+                  type="number"
+                  name="yearsOfExperience"
+                  value={preferences.yearsOfExperience}
+                  onChange={handlePreferenceChange}
+                  placeholder="e.g., 5"
+                  className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-1.5">
+                  Key Skills (comma separated)
+                </label>
+                <input
+                  name="skills"
+                  value={preferences.skills}
+                  onChange={handlePreferenceChange}
+                  placeholder="e.g., React, Node.js, TypeScript"
+                  className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-1.5">
+                  Industry
+                </label>
+                <input
+                  name="industry"
+                  value={preferences.industry}
+                  onChange={handlePreferenceChange}
+                  placeholder="e.g., Technology, Finance, Healthcare"
+                  className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-neutral-300 mb-1.5">
+                  Custom Instructions (optional)
+                </label>
+                <textarea
+                  name="customInstructions"
+                  value={preferences.customInstructions}
+                  onChange={handlePreferenceChange}
+                  rows={3}
+                  className="w-full px-4 py-2.5 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none"
+                  placeholder="Any specific instructions for the AI..."
+                />
+              </div>
 
-            <Button
-              variant="primary"
-              onClick={handleEnhance}
-              loading={enhancing}
-              className="w-full"
-            >
-              {enhancing ? 'Enhancing with AI...' : 'Enhance Resume'}
-            </Button>
-            
-            {enhancing && (
-              <p className="text-sm text-gray-500 text-center mt-2">
-                This may take a minute...
-              </p>
-            )}
-          </Card>
+              <button
+                onClick={handleEnhance}
+                disabled={enhancing}
+                className="w-full py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-medium hover:from-indigo-500 hover:to-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {enhancing ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Enhancing with AI...
+                  </>
+                ) : (
+                  'Enhance Resume'
+                )}
+              </button>
+              
+              {enhancing && (
+                <p className="text-sm text-neutral-500 text-center">
+                  This may take a minute...
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

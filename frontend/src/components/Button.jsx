@@ -1,19 +1,31 @@
+import { cn } from '@/lib/utils'
+
 export default function Button({ 
   children, 
   type = 'button', 
   variant = 'primary', 
+  size = 'default',
   disabled = false,
   loading = false,
   onClick,
   className = ''
 }) {
-  const baseStyles = 'px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed'
+  const baseStyles = 'inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg'
   
   const variants = {
-    primary: 'bg-indigo-600 hover:bg-indigo-700 text-white',
-    secondary: 'bg-gray-100 hover:bg-gray-200 text-gray-800',
+    primary: 'bg-white text-black hover:bg-neutral-200',
+    secondary: 'bg-neutral-900 border border-neutral-800 text-white hover:bg-neutral-800 hover:border-neutral-700',
     danger: 'bg-red-600 hover:bg-red-700 text-white',
-    outline: 'border border-gray-300 hover:bg-gray-50 text-gray-700'
+    outline: 'border border-neutral-700 text-white hover:bg-neutral-900 hover:border-neutral-600',
+    ghost: 'text-neutral-400 hover:text-white hover:bg-neutral-900',
+    gradient: 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 shadow-lg shadow-indigo-500/25',
+  }
+
+  const sizes = {
+    sm: 'px-3 py-1.5 text-sm',
+    default: 'px-4 py-2 text-sm',
+    lg: 'px-6 py-3 text-base',
+    xl: 'px-8 py-4 text-lg',
   }
 
   return (
@@ -21,9 +33,17 @@ export default function Button({
       type={type}
       disabled={disabled || loading}
       onClick={onClick}
-      className={`${baseStyles} ${variants[variant]} ${className}`}
+      className={cn(baseStyles, variants[variant], sizes[size], className)}
     >
-      {loading ? 'Loading...' : children}
+      {loading ? (
+        <>
+          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          Loading...
+        </>
+      ) : children}
     </button>
   )
 }
