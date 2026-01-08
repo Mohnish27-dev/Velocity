@@ -129,7 +129,6 @@ export default function JobAlerts() {
                 <div className="flex gap-2">
                     {[
                         { id: 'alerts', label: 'My Alerts', icon: Bell },
-                        { id: 'search', label: 'Search Jobs', icon: Search },
                     ].map(tab => (
                         <button
                             key={tab.id}
