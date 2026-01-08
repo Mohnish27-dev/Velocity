@@ -13,6 +13,21 @@ const directMessagesRef = db.collection('directMessages');
 export const setupSocketHandlers = (io, socket) => {
   const user = socket.user;
 
+  // ============ JOB ALERT EVENTS ============
+  
+  // Client can request job alert status
+  socket.on('request_job_alerts_status', async () => {
+    try {
+      console.log(`📊 User ${user.email} requested job alerts status`);
+      socket.emit('job_alerts_status', {
+        message: 'Job alerts are active and monitoring',
+        timestamp: new Date()
+      });
+    } catch (error) {
+      console.error('Job alerts status error:', error);
+    }
+  });
+
   // ============ CHANNEL EVENTS ============
 
   // Join a channel

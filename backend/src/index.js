@@ -17,6 +17,7 @@ import jobsRoutes from './routes/jobsRoute.js';
 import jobTrackerRoutes from './routes/jobTracker.js';
 import jobAlertRoutes from './routes/jobAlerts.js';
 import communityRoutes from './routes/community.js';
+import adminRoutes from './routes/admin.js';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js';
@@ -79,6 +80,7 @@ app.use('/api/fetchjobs', jobsRoutes);
 app.use('/api/job-tracker', jobTrackerRoutes);
 app.use('/api/job-alerts', jobAlertRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 handler
 app.use((req, res) => {

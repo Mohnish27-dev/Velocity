@@ -107,6 +107,10 @@ a, button {
   transition: all 0.2s ease;
 }
 
+button {
+  cursor: pointer;
+}
+
 /* Loading skeleton animation */
 @keyframes shimmer {
   0% {

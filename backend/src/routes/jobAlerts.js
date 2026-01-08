@@ -3,16 +3,17 @@ import { verifyToken } from '../middleware/auth.js';
 import { asyncHandler, ApiError } from '../middleware/errorHandler.js';
 import JobAlert from '../models/JobAlert.model.js';
 import NotificationLog from '../models/NotificationLog.model.js';
-import { triggerAlertCheck } from '../services/jobFetcher.js';
-import { getQueueStats } from '../services/jobAlertQueue.js';
+import { triggerAlertCheck, processAlert } from '../services/jobFetcher.js';
+import { getQueueStats, getQueue, emptyQueue } from '../services/jobAlertQueue.js';
+import { displayQueueStatus, clearQueue, getFailedJobsInfo } from '../utils/queueManager.js';
+import { 
+    saveJobAlertToFirebase, 
+    deleteJobAlertFromFirebase,
+    saveUserToFirebase 
+} from '../services/firebaseDataService.js';
 
 const router = express.Router();
 
-/**
- * GET /api/job-alerts/stats/summary
- * Get summary statistics for user's alerts
- * NOTE: This route MUST be defined BEFORE /:id routes to avoid "stats" being matched as an ID
- */
 router.get('/stats/summary', verifyToken, asyncHandler(async (req, res) => {
     const userId = req.user.uid;
 
@@ -49,10 +50,6 @@ router.get('/stats/summary', verifyToken, asyncHandler(async (req, res) => {
     });
 }));
 
-/**
- * GET /api/job-alerts
- * Get all job alerts for the authenticated user (1-indexed in response)
- */
 router.get('/', verifyToken, asyncHandler(async (req, res) => {
     const userId = req.user.uid;
 
@@ -60,10 +57,9 @@ router.get('/', verifyToken, asyncHandler(async (req, res) => {
         .sort({ createdAt: -1 })
         .lean();
 
-    // Add 1-indexed position to each alert for display
     const alertsWithIndex = alerts.map((alert, index) => ({
         ...alert,
-        position: index + 1 // 1-indexed as per user requirement
+        position: index + 1 
     }));
 
     res.json({
@@ -73,10 +69,6 @@ router.get('/', verifyToken, asyncHandler(async (req, res) => {
     });
 }));
 
-/**
- * GET /api/job-alerts/:id
- * Get a single job alert by ID
- */
 router.get('/:id', verifyToken, asyncHandler(async (req, res) => {
     const { id } = req.params;
     const userId = req.user.uid;
@@ -86,15 +78,11 @@ router.get('/:id', verifyToken, asyncHandler(async (req, res) => {
     if (!alert) {
         throw new ApiError(404, 'Job alert not found');
     }
-
-    // Get notification history for this alert
     const notifications = await NotificationLog.find({ alertId: id })
         .sort({ sentAt: -1 })
         .limit(50)
         .populate('jobListingId', 'title company location applyLink')
         .lean();
-
-    // Add 1-indexed positions to notifications
     const notificationsWithIndex = notifications.map((notif, index) => ({
         ...notif,
         position: index + 1
@@ -107,10 +95,7 @@ router.get('/:id', verifyToken, asyncHandler(async (req, res) => {
     });
 }));
 
-/**
- * POST /api/job-alerts
- * Create a new job alert
- */
+
 router.post('/', verifyToken, asyncHandler(async (req, res) => {
     const userId = req.user.uid;
     const userEmail = req.user.email;
@@ -122,6 +107,17 @@ router.post('/', verifyToken, asyncHandler(async (req, res) => {
 
     if (!userEmail) {
         throw new ApiError(400, 'User email is required. Please ensure you are logged in with a valid account.');
+    }
+
+    try {
+        await saveUserToFirebase({
+            uid: userId,
+            email: userEmail,
+            displayName: userName,
+            ...req.user
+        });
+    } catch (fbError) {
+        console.warn('⚠️  Could not save user to Firebase:', fbError.message);
     }
 
     const {
@@ -150,7 +146,7 @@ router.post('/', verifyToken, asyncHandler(async (req, res) => {
         throw new ApiError(400, 'You already have an active alert with this title');
     }
 
-    // Create the alert
+    // Create the alert in MongoDB
     const alert = await JobAlert.create({
         userId,
         userEmail,
@@ -164,6 +160,13 @@ router.post('/', verifyToken, asyncHandler(async (req, res) => {
         employmentType,
         isActive: true
     });
+
+    // Save to Firebase
+    try {
+        await saveJobAlertToFirebase(alert.toObject());
+    } catch (fbError) {
+        console.warn('⚠️  Could not save alert to Firebase:', fbError.message);
+    }
 
     res.status(201).json({
         success: true,
@@ -209,6 +212,13 @@ router.put('/:id', verifyToken, asyncHandler(async (req, res) => {
 
     await alert.save();
 
+    // Update in Firebase
+    try {
+        await saveJobAlertToFirebase(alert.toObject());
+    } catch (fbError) {
+        console.warn('⚠️  Could not update alert in Firebase:', fbError.message);
+    }
+
     res.json({
         success: true,
         message: 'Job alert updated successfully',
@@ -228,6 +238,13 @@ router.delete('/:id', verifyToken, asyncHandler(async (req, res) => {
 
     if (!alert) {
         throw new ApiError(404, 'Job alert not found');
+    }
+
+    // Delete from Firebase
+    try {
+        await deleteJobAlertFromFirebase(id);
+    } catch (fbError) {
+        console.warn('⚠️  Could not delete alert from Firebase:', fbError.message);
     }
 
     // Optionally clean up notification logs
@@ -328,6 +345,125 @@ router.post('/fix-email', verifyToken, asyncHandler(async (req, res) => {
         message: `Fixed ${result.modifiedCount} alerts`,
         modifiedCount: result.modifiedCount,
         userEmail
+    });
+}));
+
+/**
+ * GET /api/job-alerts/debug/queue-status
+ * Debug endpoint to check queue and worker status
+ */
+router.get('/debug/queue-status', asyncHandler(async (req, res) => {
+    const queue = getQueue();
+    const stats = await getQueueStats();
+    
+    // Get recent jobs
+    let recentJobs = [];
+    if (queue) {
+        try {
+            const waiting = await queue.getWaiting(0, 5);
+            const active = await queue.getActive(0, 5);
+            const completed = await queue.getCompleted(0, 5);
+            const failed = await queue.getFailed(0, 5);
+            
+            recentJobs = {
+                waiting: waiting.map(j => ({ id: j.id, name: j.name, data: j.data })),
+                active: active.map(j => ({ id: j.id, name: j.name, data: j.data })),
+                completed: completed.map(j => ({ id: j.id, name: j.name, returnvalue: j.returnvalue })),
+                failed: failed.map(j => ({ id: j.id, name: j.name, failedReason: j.failedReason }))
+            };
+        } catch (err) {
+            console.error('Error getting queue jobs:', err);
+        }
+    }
+    
+    res.json({
+        success: true,
+        queueAvailable: stats.available,
+        stats,
+        recentJobs,
+        message: stats.available 
+            ? 'Queue is running. Worker should be processing jobs.' 
+            : 'Queue not available. Check Redis connection.'
+    });
+}));
+
+/**
+ * POST /api/job-alerts/debug/process-now
+ * Debug endpoint to manually process all active alerts immediately
+ */
+router.post('/debug/process-now', asyncHandler(async (req, res) => {
+    const alerts = await JobAlert.find({ 
+        isActive: true,
+        userEmail: { $exists: true, $ne: '', $ne: null }
+    }).lean();
+    
+    console.log(`\n🔧 DEBUG: Manually processing ${alerts.length} alerts...`);
+    
+    const results = [];
+    for (const alert of alerts) {
+        try {
+            console.log(`\n  Processing: ${alert.title} -> ${alert.userEmail}`);
+            const result = await processAlert({
+                alertId: alert._id.toString(),
+                userId: alert.userId,
+                userEmail: alert.userEmail,
+                userName: alert.userName,
+                title: alert.title,
+                keywords: alert.keywords || [],
+                location: alert.location,
+                remoteOnly: alert.remoteOnly,
+                employmentType: alert.employmentType
+            });
+            results.push({ alert: alert.title, result });
+        } catch (error) {
+            console.error(`  Error: ${error.message}`);
+            results.push({ alert: alert.title, error: error.message });
+        }
+    }
+    
+    res.json({
+        success: true,
+        message: `Processed ${alerts.length} alerts`,
+        results
+    });
+}));
+
+/**
+ * POST /api/job-alerts/debug/empty-queue
+ * Empty all jobs from Redis queue with detailed reporting
+ */
+router.post('/debug/empty-queue', asyncHandler(async (req, res) => {
+    console.log('\n🗑️  Request to empty Redis queue received...');
+    
+    const result = await clearQueue();
+    
+    res.json({
+        success: result.success,
+        message: result.message || result.error || 'Queue operation completed',
+        timestamp: new Date()
+    });
+}));
+
+/**
+ * GET /api/job-alerts/debug/queue-details
+ * Get detailed queue status with visual formatting
+ */
+router.get('/debug/queue-details', asyncHandler(async (req, res) => {
+    const stats = await displayQueueStatus();
+    const failedJobs = await getFailedJobsInfo();
+    
+    res.json({
+        success: true,
+        stats,
+        failedJobsCount: failedJobs.length,
+        failedJobs: failedJobs.map(job => ({
+            id: job.id,
+            alert: job.data.title,
+            userEmail: job.data.userEmail,
+            failedReason: job.failedReason,
+            attempts: job.attemptsMade
+        })),
+        timestamp: new Date()
     });
 }));
 

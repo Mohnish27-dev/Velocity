@@ -6,9 +6,20 @@ import NotificationLog from '../models/NotificationLog.model.js';
 import { searchJobs } from './rapidApiService.js';
 import { sendJobAlertEmail } from './mailService.js';
 import {
+    emitNewJobsFound,
+    emitEmailSent,
+    emitEmailFailed,
+    emitAlertProcessing
+} from './jobAlertSocket.js';
+import {
+    saveNotificationToFirebase,
+    saveJobListingToFirebase
+} from './firebaseDataService.js';
+import {
     initializeQueue,
     isQueueAvailable,
     getRedisConnection,
+    createWorkerConnection,
     addBatchAlertsToQueue,
     RATE_LIMIT_CONFIG,
     pauseQueue,
@@ -28,7 +39,7 @@ const mapEmploymentType = (types) => {
     if (!types || !Array.isArray(types) || types.length === 0) {
         return ''; // Don't send employment_types if empty
     }
-    
+
     const typeMap = {
         'full-time': 'FULLTIME',
         'fulltime': 'FULLTIME',
@@ -39,11 +50,11 @@ const mapEmploymentType = (types) => {
         'internship': 'INTERN',
         'intern': 'INTERN'
     };
-    
+
     const mappedTypes = types
         .map(t => typeMap[t?.toLowerCase()] || null)
         .filter(Boolean);
-    
+
     return mappedTypes.join(',');
 };
 
@@ -53,19 +64,46 @@ const mapEmploymentType = (types) => {
 export const processAlert = async (alertData) => {
     const { alertId, userId, userEmail, userName, title, keywords, location, remoteOnly, employmentType } = alertData;
 
-    console.log(`\n📧 Processing alert: ${title} for user ${userId}`);
-    console.log(`   📬 Email will be sent to: ${userEmail || 'NO EMAIL PROVIDED!'}`);
-    console.log(`   👤 User name: ${userName || 'Unknown'}`);
+    console.log(`\n📧 [${new Date().toLocaleTimeString()}] Processing alert: ${title} for user ${userId}`);
+    console.log(`   📬 Target Email: ${userEmail || 'NO EMAIL PROVIDED!'}`);
+    console.log(`   👤 User: ${userName || 'Unknown'}`);
 
-    if (!userEmail) {
-        console.error('❌ ERROR: No email address found for this alert!');
-        return { success: false, error: 'No email address' };
+    // Emit socket event that processing started
+    emitAlertProcessing(userId, {
+        alertId,
+        alertTitle: title
+    });
+
+    // Skip if no email address is available
+    if (!userEmail || !userEmail.trim()) {
+        console.error(`❌ Skipping alert ${alertId}: No email address found for user ${userId}`);
+        return { success: false, error: 'No email address', skipped: true };
+    }
+
+    // Verify the alert still exists before processing
+    const alertExists = await JobAlert.findById(alertId);
+    if (!alertExists) {
+        console.log(`⚠️ Alert ${alertId} has been deleted - skipping`);
+        return { success: false, error: 'Alert deleted', skipped: true };
+    }
+
+    // Verify the alert is still active
+    if (!alertExists.isActive) {
+        console.log(`⚠️ Alert ${alertId} is no longer active - skipping`);
+        return { success: false, error: 'Alert inactive', skipped: true };
+    }
+
+    // Ensure email matches the current alert's email (in case of updates)
+    const currentEmail = alertExists.userEmail;
+    if (!currentEmail || currentEmail.trim() === '') {
+        console.error(`❌ Alert ${alertId} has no email address in database - skipping`);
+        return { success: false, error: 'No email in database', skipped: true };
     }
 
     try {
         // Build search query from alert preferences
         const searchQuery = [title, ...(keywords || [])].filter(Boolean).join(' ');
-        
+
         // Map employment types to RapidAPI format
         const mappedEmploymentType = mapEmploymentType(employmentType);
         console.log(`📋 Employment type: ${employmentType} -> ${mappedEmploymentType || '(none)'}`);
@@ -86,8 +124,8 @@ export const processAlert = async (alertData) => {
             return { success: true, newJobs: 0 };
         }
 
-        // Filter and save new jobs
-        const newJobs = [];
+        // Process all fetched jobs (DISABLED DEDUPLICATION - ALWAYS SEND EMAILS)
+        const jobsToSend = [];
 
         for (const job of fetchedJobs) {
             // Check if job already exists in our cache
@@ -97,54 +135,106 @@ export const processAlert = async (alertData) => {
                 // Save new job to cache
                 existingJob = await JobListing.create(job);
                 console.log(`💾 Cached new job: ${job.title} at ${job.company}`);
+
+                // Also save to Firebase
+                try {
+                    await saveJobListingToFirebase(existingJob.toObject());
+                } catch (fbError) {
+                    console.warn('⚠️  Could not save job to Firebase:', fbError.message);
+                }
             }
 
-            // Check if user has already been notified about this job
-            const alreadyNotified = await NotificationLog.findOne({
-                userId,
-                jobListingId: existingJob._id
+            // ALWAYS add to email list (deduplication disabled)
+            jobsToSend.push({
+                ...job,
+                _id: existingJob._id
             });
-
-            if (!alreadyNotified) {
-                newJobs.push({
-                    ...job,
-                    _id: existingJob._id
-                });
-            }
         }
 
-        console.log(`🆕 ${newJobs.length} new jobs for user (after deduplication)`);
+        console.log(`📧 Sending ${jobsToSend.length} jobs to user (deduplication DISABLED)`);
 
-        // Send email if there are new jobs
-        if (newJobs.length > 0) {
+        // Always send email if there are jobs
+        if (jobsToSend.length > 0) {
             try {
-                console.log(`📬 Sending email to: ${userEmail} (${userName})`);
-                console.log(`   Alert: "${title}", Jobs count: ${newJobs.length}`);
-                
-                const emailResult = await sendJobAlertEmail({
-                    userEmail,
-                    userName: userName || 'Job Seeker',
+                // Use the current email from the database to ensure accuracy
+                const recipientEmail = currentEmail;
+                const recipientName = alertExists.userName || userName || 'Job Seeker';
+
+                console.log(`\n${'='.repeat(60)}`);
+                console.log(`📧 SENDING EMAIL NOW`);
+                console.log(`${'='.repeat(60)}`);
+                console.log(`📬 To: ${recipientEmail}`);
+                console.log(`👤 Name: ${recipientName}`);
+                console.log(`🎯 Alert: "${title}"`);
+                console.log(`📊 Jobs Count: ${jobsToSend.length}`);
+                console.log(`${'='.repeat(60)}\n`);
+
+                // Emit socket event to user about new jobs found
+                emitNewJobsFound(userId, {
+                    alertId,
                     alertTitle: title,
-                    jobs: newJobs
+                    jobCount: jobsToSend.length,
+                    jobs: jobsToSend.map(job => ({
+                        title: job.title,
+                        company: job.company,
+                        location: job.location,
+                        applyLink: job.applyLink
+                    }))
                 });
-                
-                console.log(`✅ Email sent successfully! Message ID: ${emailResult.messageId}`);
-                console.log(`   Recipient: ${userEmail}`);
+
+                console.log(`⏳ Calling email service...`);
+                const emailResult = await sendJobAlertEmail({
+                    userEmail: recipientEmail,
+                    userName: recipientName,
+                    alertTitle: title,
+                    jobs: jobsToSend
+                });
+                console.log(`✅ Email service call completed!`);
+
+                console.log(`\n${'🎉'.repeat(30)}`);
+                console.log(`✅✅✅ EMAIL SENT SUCCESSFULLY! ✅✅✅`);
+                console.log(`📧 Message ID: ${emailResult.messageId}`);
+                console.log(`📬 Recipient: ${recipientEmail}`);
+                console.log(`📊 Jobs Sent: ${jobsToSend.length}`);
+                console.log(`${'🎉'.repeat(30)}\n`);
+
+                // Emit socket event confirming email was sent
+                emitEmailSent(userId, {
+                    alertId,
+                    alertTitle: title,
+                    jobCount: jobsToSend.length,
+                    recipientEmail,
+                    messageId: emailResult.messageId
+                });
 
                 // Log all notifications
-                const notificationPromises = newJobs.map(job =>
-                    NotificationLog.create({
-                        userId,
-                        alertId,
-                        jobListingId: job._id,
-                        externalJobId: job.externalId,
-                        emailStatus: 'sent',
-                        emailMessageId: emailResult.messageId
-                    }).catch(err => {
+                const notificationPromises = jobsToSend.map(async job => {
+                    try {
+                        const notification = await NotificationLog.create({
+                            userId,
+                            alertId,
+                            jobListingId: job._id,
+                            externalJobId: job.externalId,
+                            emailStatus: 'sent',
+                            emailMessageId: emailResult.messageId
+                        });
+
+                        // Save to Firebase (convert ObjectIds to strings)
+                        try {
+                            await saveNotificationToFirebase({
+                                ...notification.toObject(),
+                                _id: notification._id.toString(),
+                                alertId: alertId.toString(),
+                                jobListingId: job._id.toString()
+                            });
+                        } catch (fbError) {
+                            console.warn('⚠️  Could not save notification to Firebase:', fbError.message);
+                        }
+                    } catch (err) {
                         // Handle duplicate key error gracefully
                         if (err.code !== 11000) throw err;
-                    })
-                );
+                    }
+                });
 
                 await Promise.all(notificationPromises);
 
@@ -152,19 +242,26 @@ export const processAlert = async (alertData) => {
                 await JobAlert.findByIdAndUpdate(alertId, {
                     lastCheckedAt: new Date(),
                     $inc: {
-                        totalJobsFound: newJobs.length,
+                        totalJobsFound: jobsToSend.length,
                         totalEmailsSent: 1
                     }
                 });
 
-                console.log(`✉️ Email sent with ${newJobs.length} jobs`);
+                console.log(`✉️ Email sent with ${jobsToSend.length} jobs`);
                 consecutiveFailures = 0; // Reset on success
 
             } catch (emailError) {
                 console.error('❌ Failed to send email:', emailError.message);
 
+                // Emit socket event about email failure
+                emitEmailFailed(userId, {
+                    alertId,
+                    alertTitle: title,
+                    error: emailError.message
+                });
+
                 // Log failed notifications
-                await Promise.all(newJobs.map(job =>
+                await Promise.all(jobsToSend.map(job =>
                     NotificationLog.create({
                         userId,
                         alertId,
@@ -177,7 +274,7 @@ export const processAlert = async (alertData) => {
             }
         }
 
-        return { success: true, newJobs: newJobs.length };
+        return { success: true, newJobs: jobsToSend.length };
 
     } catch (error) {
         console.error(`❌ Error processing alert ${alertId}:`, error.message);
@@ -203,45 +300,110 @@ export const processAlert = async (alertData) => {
 
 /**
  * Create and start the queue worker (only if Redis available)
+ * IMPORTANT: Worker needs its own Redis connection (BullMQ requirement)
  */
 export const startWorker = () => {
-    const redisConnection = getRedisConnection();
-
-    if (!redisConnection || !isQueueAvailable()) {
-        console.log('⚠️  Redis not available - Worker not started');
+    if (!isQueueAvailable()) {
+        console.log('⚠️  Queue not available - Worker not started');
         return null;
     }
+
+    // Create a SEPARATE Redis connection for the worker
+    // BullMQ requires this because workers use blocking commands
+    const workerConnection = createWorkerConnection();
+
+    if (!workerConnection) {
+        console.log('⚠️  Could not create worker connection - Worker not started');
+        return null;
+    }
+
+    console.log('🔌 Created dedicated Redis connection for worker');
+    console.log('🔧 Worker connection state:', workerConnection.status);
 
     const worker = new Worker(
         'job-alerts',
         async (job) => {
-            console.log(`\n🔄 Worker processing job: ${job.id}`);
-            const result = await processAlert(job.data);
-            return result;
+            console.log(`\n${'🔥'.repeat(30)}`);
+            console.log(`🔄 WORKER PROCESSING JOB: ${job.id}`);
+            console.log(`📧 Alert: ${job.data.title}`);
+            console.log(`📬 Email: ${job.data.userEmail}`);
+            console.log(`👤 User: ${job.data.userName || 'N/A'}`);
+            console.log(`${'🔥'.repeat(30)}\n`);
+
+            try {
+                console.log('⏳ Starting alert processing...');
+                const result = await processAlert(job.data);
+                console.log(`\n${'✅'.repeat(30)}`);
+                console.log(`✅ WORKER COMPLETED: ${job.id}`);
+                console.log(`   Jobs sent: ${result?.newJobs || 0}`);
+                console.log(`   Success: ${result?.success}`);
+                console.log(`${'✅'.repeat(30)}\n`);
+                return result;
+            } catch (error) {
+                console.error(`\n${'❌'.repeat(30)}`);
+                console.error(`❌ WORKER ERROR: ${job.id}`);
+                console.error(`   Error:`, error.message);
+                console.error(`   Stack:`, error.stack);
+                console.error(`${'❌'.repeat(30)}\n`);
+                throw error;
+            }
         },
         {
-            connection: redisConnection,
+            connection: workerConnection,
             concurrency: RATE_LIMIT_CONFIG.maxConcurrent,
             limiter: {
                 max: RATE_LIMIT_CONFIG.maxRequestsPerMinute,
                 duration: 60000 // 1 minute
-            }
+            },
+            autorun: true // Explicitly enable autorun
         }
     );
 
     worker.on('completed', (job, result) => {
-        console.log(`✅ Job ${job.id} completed. New jobs: ${result?.newJobs || 0}`);
+        console.log(`\n🎉 Job ${job.id} completed successfully!`);
+        console.log(`   New jobs found: ${result?.newJobs || 0}`);
+        console.log(`   Skipped: ${result?.skipped ? 'Yes' : 'No'}`);
     });
 
     worker.on('failed', (job, error) => {
-        console.error(`❌ Job ${job.id} failed:`, error.message);
+        console.error(`\n💥 Job ${job.id} FAILED:`);
+        console.error(`   Error: ${error.message}`);
+        console.error(`   Stack:`, error.stack);
     });
 
     worker.on('error', (error) => {
-        console.error('❌ Worker error:', error);
+        console.error('\n❌ WORKER ERROR:', error.message);
     });
 
-    console.log('👷 Job Alert Worker started');
+    worker.on('active', (job) => {
+        console.log(`\n${'▶️'.repeat(20)}`);
+        console.log(`▶️  WORKER PICKED UP JOB: ${job.id}`);
+        console.log(`   Alert: ${job.data.title}`);
+        console.log(`   Email: ${job.data.userEmail}`);
+        console.log(`${'▶️'.repeat(20)}\n`);
+    });
+
+    worker.on('stalled', (jobId) => {
+        console.warn(`\n⚠️  Job ${jobId} stalled`);
+    });
+
+    worker.on('ready', () => {
+        console.log('🟢 Worker is READY and waiting for jobs');
+    });
+
+    worker.on('closing', () => {
+        console.log('🔴 Worker is closing');
+    });
+
+    console.log('👷 Job Alert Worker started and listening for jobs...');
+    console.log('   Concurrency:', RATE_LIMIT_CONFIG.maxConcurrent);
+    console.log('   Rate limit:', RATE_LIMIT_CONFIG.maxRequestsPerMinute, 'requests/minute');
+    
+    // Force worker to check for jobs immediately
+    worker.run().catch(err => {
+        console.error('❌ Worker run error:', err.message);
+    });
+    
     return worker;
 };
 
@@ -249,33 +411,49 @@ export const startWorker = () => {
  * Scheduled task to enqueue all active alerts
  */
 export const scheduleAlertChecks = () => {
-    // Check if we should use 10-second interval for testing
-    const testingMode = process.env.ALERT_TEST_INTERVAL === '10s';
-    
-    if (testingMode) {
-        console.log('🧪 TESTING MODE: Running job alerts every 10 seconds');
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const testInterval = process.env.ALERT_TEST_INTERVAL;
+
+    // In development mode with ALERT_TEST_INTERVAL set
+    if (isDevelopment && testInterval) {
+        // Parse interval (e.g., '10s' -> 10000ms, '5m' -> 300000ms)
+        let intervalMs = 10000; // default 10 seconds
         
-        // Use setInterval for 10-second testing
-        setInterval(async () => {
-            console.log('\n⏰ Scheduled job alert check starting...');
-            await runAlertCheck();
-        }, 10000);
-        
-        // Also run immediately
-        setTimeout(async () => {
-            console.log('\n⏰ Running initial job alert check...');
-            await runAlertCheck();
-        }, 2000);
-        
+        if (testInterval.endsWith('s')) {
+            intervalMs = parseInt(testInterval) * 1000;
+        } else if (testInterval.endsWith('m')) {
+            intervalMs = parseInt(testInterval) * 60 * 1000;
+        } else if (testInterval.endsWith('h')) {
+            intervalMs = parseInt(testInterval) * 60 * 60 * 1000;
+        }
+
+        console.log(`🧪 DEVELOPMENT MODE: Running job alerts every ${testInterval} (${intervalMs}ms)`);
+
+        const runTest = async () => {
+            console.log('\n⏰ [DEV] Scheduled job alert check starting...');
+            try {
+                await runAlertCheck();
+            } catch (err) {
+                console.error('❌ Error in runAlertCheck:', err.message);
+            } finally {
+                // Schedule next run only AFTER current one finishes
+                setTimeout(runTest, intervalMs);
+            }
+        };
+
+        // Start initial test run after 2 seconds
+        setTimeout(runTest, 2000);
         return;
     }
+
+    // PRODUCTION MODE: Run every 24 hours at midnight (0 0 * * *)
+    // Custom schedule can be set via ALERT_CRON_SCHEDULE env var
+    const schedule = process.env.ALERT_CRON_SCHEDULE || '0 0 * * *';
     
-    // Run every 6 hours: 0 */6 * * *
-    // For testing, you can use '*/5 * * * *' (every 5 minutes)
-    const schedule = process.env.ALERT_CRON_SCHEDULE || '0 */6 * * *';
+    console.log(`🏭 PRODUCTION MODE: Job alerts scheduled with cron: ${schedule} (runs every 24 hours)`);
 
     cron.schedule(schedule, async () => {
-        console.log('\n⏰ Scheduled job alert check starting...');
+        console.log('\n⏰ [PROD] Scheduled job alert check starting...');
 
         try {
             // Get all active alerts
@@ -330,55 +508,62 @@ export const scheduleAlertChecks = () => {
 
 /**
  * Core alert check logic - extracted for reuse
+ * PROCESSES DIRECTLY - No queue/worker dependency
  */
 const runAlertCheck = async () => {
     try {
-        // Get all active alerts
-        const activeAlerts = await JobAlert.find({ isActive: true })
+        // Get all active alerts that have an email address
+        const activeAlerts = await JobAlert.find({
+            isActive: true,
+            userEmail: { $exists: true, $ne: '', $ne: null }
+        })
             .select('_id userId userEmail userName title keywords location remoteOnly employmentType')
             .lean();
 
         if (!activeAlerts.length) {
-            console.log('📭 No active alerts to process');
+            console.log('📭 No active alerts with valid email addresses to process');
             return;
         }
 
-        console.log(`📋 Found ${activeAlerts.length} active alerts`);
-        
+        console.log(`📋 Found ${activeAlerts.length} active alerts with valid emails`);
+
         // Debug: Log each alert's details
         activeAlerts.forEach((alert, i) => {
-            console.log(`   Alert ${i + 1}: "${alert.title}" - Email: ${alert.userEmail || 'NO EMAIL!'}`);
+            console.log(`   Alert ${i + 1}: "${alert.title}" - Email: ${alert.userEmail}`);
         });
 
-        // Prepare alert data for queue
-        const alertsToQueue = activeAlerts.map(alert => ({
-            alertId: alert._id.toString(),
-            userId: alert.userId,
-            userEmail: alert.userEmail,
-            userName: alert.userName,
-            title: alert.title,
-            keywords: alert.keywords || [],
-            location: alert.location,
-            remoteOnly: alert.remoteOnly,
-            employmentType: alert.employmentType
-        }));
-
-        // If queue available, add to queue, otherwise process directly
-        if (isQueueAvailable()) {
-            await addBatchAlertsToQueue(alertsToQueue);
-            console.log(`📥 Added ${alertsToQueue.length} alerts to queue`);
-        } else {
-            console.log('⚠️  Queue not available, processing alerts directly...');
-            for (const alertData of alertsToQueue) {
-                try {
-                    await processAlert(alertData);
-                    // Add delay between requests to respect rate limits
-                    await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_CONFIG.delayBetweenJobs));
-                } catch (err) {
-                    console.error(`Failed to process alert ${alertData.alertId}:`, err.message);
-                }
+        // PROCESS DIRECTLY - Don't use queue/worker (they're broken)
+        console.log('\n🚀 PROCESSING ALERTS DIRECTLY (BYPASSING QUEUE)...\n');
+        
+        for (const alert of activeAlerts) {
+            try {
+                console.log(`\n${'='.repeat(60)}`);
+                console.log(`📧 Processing: "${alert.title}" → ${alert.userEmail}`);
+                console.log(`${'='.repeat(60)}\n`);
+                
+                const result = await processAlert({
+                    alertId: alert._id.toString(),
+                    userId: alert.userId,
+                    userEmail: alert.userEmail,
+                    userName: alert.userName,
+                    title: alert.title,
+                    keywords: alert.keywords || [],
+                    location: alert.location,
+                    remoteOnly: alert.remoteOnly,
+                    employmentType: alert.employmentType
+                });
+                
+                console.log(`\n✅ Alert processed: ${result.newJobs || 0} jobs sent\n`);
+                
+                // Add delay between requests to respect rate limits
+                await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_CONFIG.delayBetweenJobs));
+                
+            } catch (err) {
+                console.error(`❌ Failed to process alert ${alert.title}:`, err.message);
             }
         }
+        
+        console.log('\n✅ All alerts processed!\n');
 
     } catch (error) {
         console.error('❌ Error in alert check:', error);
@@ -427,6 +612,16 @@ export const initJobFetcher = async () => {
     if (queueInitialized) {
         // Start the worker
         worker = startWorker();
+
+        if (worker) {
+            console.log('✅ Worker is ACTIVE and ready to process jobs');
+            console.log('   Worker will automatically process jobs added to the queue');
+        } else {
+            console.log('❌ Worker failed to start!');
+        }
+    } else {
+        console.log('⚠️  Queue not initialized - worker will not start');
+        console.log('   Jobs will be processed directly (without queue)');
     }
 
     // Schedule periodic checks (works with or without Redis)

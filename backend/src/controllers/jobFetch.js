@@ -20,16 +20,30 @@ export const getJobs = async (req, res) => {
     };
     
     const jobsData = await fetchJobs(querystring);
+    
+    // Check if there was an API error
+    if (jobsData.error) {
+      const statusCode = jobsData.statusCode || 500;
+      return res.status(statusCode).json({
+        success: false,
+        message: jobsData.error,
+        data: [],
+        count: 0
+      });
+    }
+    
     const jobs = Array.isArray(jobsData.data) ? jobsData.data : [];
     
     return res.status(200).json({
+      success: true,
       message: "Jobs fetched successfully",
       data: jobs,
       count: jobs.length
     });
   } catch (error) {
     console.error("Error fetching jobs:", error);
-    return res.status(500).json({ 
+    return res.status(500).json({
+      success: false,
       message: "Failed to fetch jobs. Please try again later."
     });
   }

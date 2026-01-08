@@ -13,6 +13,7 @@ import Enhance from './pages/Enhance'
 import ResumeView from './pages/ResumeView'
 import JobSearch from './pages/JobSearch'
 import JobAlerts from './pages/JobAlerts'
+import JobTracker from './pages/JobTracker'
 import Community from './pages/Community'
 
 // Protected Route Component
@@ -101,6 +102,7 @@ function App() {
             <Route path="/resume/:resumeId" element={<ProtectedRoute><ResumeView /></ProtectedRoute>} />
             <Route path="/jobs" element={<ProtectedRoute><JobSearch /></ProtectedRoute>} />
             <Route path="/job-alerts" element={<ProtectedRoute><JobAlerts /></ProtectedRoute>} />
+            <Route path="/job-tracker" element={<ProtectedRoute><JobTracker /></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
 
             {/* Fallback */}

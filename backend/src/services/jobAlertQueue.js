@@ -8,6 +8,7 @@ dotenv.config();
 let redisAvailable = false;
 let redisConnection = null;
 let jobAlertQueue = null;
+let redisUrl = null; // Store the URL for creating worker connections
 
 // Rate limiter configuration
 export const RATE_LIMIT_CONFIG = {
@@ -18,11 +19,40 @@ export const RATE_LIMIT_CONFIG = {
 };
 
 /**
+ * Create a new Redis connection for the worker
+ * BullMQ requires separate connections for Queue and Worker
+ * because the Worker uses blocking commands
+ */
+export const createWorkerConnection = () => {
+    if (!redisUrl) {
+        console.log('⚠️  Redis URL not available for worker connection');
+        return null;
+    }
+
+    const workerConnection = new IORedis(redisUrl, {
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false,
+        retryStrategy: (times) => {
+            if (times > 3) {
+                return null;
+            }
+            return Math.min(times * 200, 1000);
+        }
+    });
+
+    workerConnection.on('error', (err) => {
+        console.error('❌ Worker Redis connection error:', err.message);
+    });
+
+    return workerConnection;
+};
+
+/**
  * Initialize Redis connection and queue
  * Returns true if successful, false otherwise
  */
 export const initializeQueue = async () => {
-    const redisUrl = process.env.REDIS_URL;
+    redisUrl = process.env.REDIS_URL;
 
     if (!redisUrl) {
         console.log('ℹ️  REDIS_URL not configured - job queue disabled');
@@ -108,14 +138,24 @@ export const addAlertToQueue = async (alertData, options = {}) => {
         return null;
     }
 
-    const jobId = `alert-${alertData.alertId}-${Date.now()}`;
+    // Use a stable jobId for the current minute to prevent duplicate checks
+    // within the same 10-second testing window, but allow different runs over time.
+    const currentMinute = Math.floor(Date.now() / 60000);
+    const jobId = `alert-${alertData.alertId}-${currentMinute}`;
 
-    return await jobAlertQueue.add('fetch-jobs', alertData, {
+    const job = await jobAlertQueue.add('fetch-jobs', alertData, {
         jobId,
         delay: options.delay || 0,
         priority: options.priority || 1,
         ...options
     });
+
+    console.log(`✅ Job added to queue: ${jobId}`);
+    console.log(`   Alert: ${alertData.title}`);
+    console.log(`   Email: ${alertData.userEmail}`);
+    console.log(`   Delay: ${options.delay || 0}ms`);
+
+    return job;
 };
 
 // Utility to add multiple alerts with staggered delays
@@ -125,17 +165,30 @@ export const addBatchAlertsToQueue = async (alerts) => {
         return [];
     }
 
-    const jobs = alerts.map((alert, index) => ({
-        name: 'fetch-jobs',
-        data: alert,
-        opts: {
-            jobId: `alert-${alert.alertId}-${Date.now()}-${index}`,
-            delay: index * RATE_LIMIT_CONFIG.delayBetweenJobs,
-            priority: 1
-        }
-    }));
+    console.log(`\n📦 Adding ${alerts.length} jobs to queue...`);
 
-    return await jobAlertQueue.addBulk(jobs);
+    const currentMinute = Math.floor(Date.now() / 60000);
+    const jobs = alerts.map((alert, index) => {
+        const jobId = `alert-${alert.alertId}-${currentMinute}-${index}`;
+        const delay = index * RATE_LIMIT_CONFIG.delayBetweenJobs;
+
+        console.log(`   ${index + 1}. ${alert.title} → ${alert.userEmail} (delay: ${delay}ms)`);
+
+        return {
+            name: 'fetch-jobs',
+            data: alert,
+            opts: {
+                jobId,
+                delay,
+                priority: 1
+            }
+        };
+    });
+
+    const result = await jobAlertQueue.addBulk(jobs);
+    console.log(`✅ Successfully added ${result.length} jobs to queue\n`);
+
+    return result;
 };
 
 // Get queue statistics
@@ -174,6 +227,29 @@ export const cleanQueue = async () => {
     await jobAlertQueue.clean(24 * 3600 * 1000, 1000, 'completed');
     await jobAlertQueue.clean(7 * 24 * 3600 * 1000, 100, 'failed');
     console.log('🧹 Queue cleaned');
+};
+
+// Empty/drain the entire queue
+export const emptyQueue = async () => {
+    if (!isQueueAvailable()) {
+        console.log('⚠️  Queue not available');
+        return { success: false, message: 'Queue not available' };
+    }
+
+    try {
+        // Remove all jobs in different states
+        await jobAlertQueue.drain(); // Remove all waiting jobs
+        await jobAlertQueue.clean(0, 0, 'completed'); // Remove all completed
+        await jobAlertQueue.clean(0, 0, 'failed'); // Remove all failed
+        await jobAlertQueue.clean(0, 0, 'delayed'); // Remove all delayed
+        await jobAlertQueue.clean(0, 0, 'active'); // Remove all active
+
+        console.log('🗑️  Queue emptied successfully');
+        return { success: true, message: 'Queue emptied' };
+    } catch (error) {
+        console.error('❌ Error emptying queue:', error.message);
+        return { success: false, error: error.message };
+    }
 };
 
 // Get Redis connection for worker
