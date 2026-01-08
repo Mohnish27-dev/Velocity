@@ -18,28 +18,28 @@ const firebaseConfig = {
 let initialized = false;
 
 // Check if we have a service account file
-if (process.env.FIREBASE_SERVICE_ACCOUNT_PATH) {
-  try {
-    // Resolve path relative to backend folder
-    const serviceAccountPath = join(__dirname, '../../', process.env.FIREBASE_SERVICE_ACCOUNT_PATH);
-    
-    // Check if file exists before trying to read it
-    if (existsSync(serviceAccountPath)) {
-      const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
-      
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        storageBucket: firebaseConfig.storageBucket
-      });
-      initialized = true;
-      console.log('✅ Firebase Admin SDK initialized with service account');
-    } else {
-      console.log("Error")
-    }
-  } catch (error) {
-    console.error('❌ Failed to load service account:', error.message);
-  }
+if (!process.env.FIREBASE_SERVICE_ACCOUNT) {
+  throw new Error("FIREBASE_SERVICE_ACCOUNT env variable not set");
 }
+const serviceAccount = JSON.parse(
+  process.env.FIREBASE_SERVICE_ACCOUNT
+);
+
+try {
+  serviceAccount.private_key =
+    serviceAccount.private_key.replace(/\\n/g, "\n");
+
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET
+  });
+  initialized = true;
+  console.log('✅ Firebase Admin SDK initialized with service account');
+}
+catch (error) {
+  console.error('❌ Failed to load service account:', error.message);
+}
+
 
 if (!initialized) {
   // Check for GOOGLE_APPLICATION_CREDENTIALS environment variable
