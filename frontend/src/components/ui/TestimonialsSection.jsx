@@ -58,12 +58,12 @@ export default function TestimonialsSection() {
         >
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Loved by{" "}
-            <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            <span className="text-sky-400">
               thousands
             </span>{" "}
             of job seekers
           </h2>
-          <p className="text-neutral-400 max-w-2xl mx-auto">
+          <p className="text-zinc-400 max-w-2xl mx-auto">
             Join the community of professionals who accelerated their careers with Velocity
           </p>
         </motion.div>
@@ -76,33 +76,31 @@ export default function TestimonialsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="group relative p-6 rounded-xl border border-neutral-800 bg-neutral-950/50 hover:bg-neutral-900/50 transition-all duration-300"
+              className="group relative p-6 rounded-xl border border-zinc-800 bg-zinc-950/50 hover:bg-zinc-900/50 hover:border-zinc-700 transition-all duration-300"
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl" />
-              
               <div className="relative">
                 <div className="flex items-center gap-1 mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className="w-4 h-4 fill-yellow-500 text-yellow-500"
+                      className="w-4 h-4 fill-amber-400 text-amber-400"
                     />
                   ))}
                 </div>
                 
-                <p className="text-neutral-300 mb-6 leading-relaxed text-sm">
+                <p className="text-zinc-300 mb-6 leading-relaxed text-sm">
                   "{testimonial.content}"
                 </p>
                 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                  <div className="w-10 h-10 bg-sky-500/20 border border-sky-500/30 rounded-full flex items-center justify-center text-sky-400 text-sm font-semibold">
                     {testimonial.avatar}
                   </div>
                   <div>
                     <div className="font-medium text-white text-sm">
                       {testimonial.name}
                     </div>
-                    <div className="text-xs text-neutral-500">
+                    <div className="text-xs text-zinc-500">
                       {testimonial.role}
                     </div>
                   </div>

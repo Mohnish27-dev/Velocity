@@ -16,7 +16,7 @@ export default function Home() {
 
       {/* Main Features Section - Bento Grid */}
       <section id="features" className="relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-neutral-950 to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-zinc-950 to-black" />
         <div className="relative px-4 sm:px-6 lg:px-8">
           <FeaturesSection />
           
@@ -32,7 +32,7 @@ export default function Home() {
 
       {/* Testimonials Section */}
       <section className="relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-neutral-950 to-black" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black via-zinc-950 to-black" />
         <div className="relative">
           <TestimonialsSection />
         </div>

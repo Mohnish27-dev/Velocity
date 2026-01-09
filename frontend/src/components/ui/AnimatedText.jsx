@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 export function AnimatedGradientText({ children, className = "" }) {
   return (
     <span
-      className={`bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient ${className}`}
+      className={`text-sky-400 ${className}`}
     >
       {children}
     </span>

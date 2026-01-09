@@ -42,9 +42,9 @@ const worldMapDots = [
 export default function HeroSection() {
   return (
     <section className="relative min-h-screen overflow-hidden">
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-neutral-950 via-black to-black" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent" />
+      {/* Background Effects - Minimal */}
+      <div className="absolute inset-0 bg-gradient-to-b from-zinc-950 via-black to-black" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-sky-900/10 via-transparent to-transparent" />
       
       {/* Grid Pattern */}
       <div 
@@ -68,10 +68,10 @@ export default function HeroSection() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-neutral-800 bg-neutral-900/50 backdrop-blur-sm mb-8"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm mb-8"
           >
-            <Sparkles className="w-4 h-4 text-indigo-400" />
-            <span className="text-sm text-neutral-300">
+            <Sparkles className="w-4 h-4 text-sky-400" />
+            <span className="text-sm text-zinc-300">
               AI-Powered Career Acceleration
             </span>
           </motion.div>
@@ -102,7 +102,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-lg md:text-xl text-neutral-400 mb-10 max-w-2xl mx-auto leading-relaxed"
+            className="text-lg md:text-xl text-zinc-400 mb-10 max-w-2xl mx-auto leading-relaxed"
           >
             The intelligent job search platform that enhances your resume with AI,
             matches you with perfect opportunities, and tracks your applications—all in one place.
@@ -117,14 +117,14 @@ export default function HeroSection() {
           >
             <Link
               to="/register"
-              className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black font-medium rounded-lg hover:bg-neutral-200 transition-all duration-200"
+              className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black font-medium rounded-lg hover:bg-zinc-200 transition-all duration-200"
             >
               Get Started Free
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
               to="/jobs"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-neutral-700 text-white font-medium rounded-lg hover:bg-neutral-900 hover:border-neutral-600 transition-all duration-200"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 border border-zinc-700 text-white font-medium rounded-lg hover:bg-zinc-900 hover:border-zinc-600 transition-all duration-200"
             >
               Explore Jobs
             </Link>
@@ -135,7 +135,7 @@ export default function HeroSection() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="flex flex-wrap justify-center gap-8 md:gap-16 mt-16 pt-8 border-t border-neutral-800"
+            className="flex flex-wrap justify-center gap-8 md:gap-16 mt-16 pt-8 border-t border-zinc-800"
           >
             {[
               { value: "10K+", label: "Active Jobs" },
@@ -145,7 +145,7 @@ export default function HeroSection() {
             ].map((stat, index) => (
               <div key={index} className="text-center">
                 <div className="text-2xl md:text-3xl font-bold text-white">{stat.value}</div>
-                <div className="text-sm text-neutral-500 mt-1">{stat.label}</div>
+                <div className="text-sm text-zinc-500 mt-1">{stat.label}</div>
               </div>
             ))}
           </motion.div>
@@ -159,23 +159,23 @@ export default function HeroSection() {
           className="mt-20 relative"
         >
           {/* Glow background for map */}
-          <div className="absolute inset-0 bg-gradient-to-b from-indigo-500/5 via-purple-500/5 to-transparent rounded-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-b from-sky-500/5 via-transparent to-transparent rounded-3xl" />
           
           <div className="text-center mb-8 relative">
             <p className="text-2xl md:text-3xl font-medium text-white">
               Global{" "}
-              <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              <span className="text-sky-400">
                 <AnimatedLetters text="Connectivity" delay={1} />
               </span>
             </p>
-            <p className="text-sm md:text-base text-neutral-400 max-w-xl mx-auto mt-3">
+            <p className="text-sm md:text-base text-zinc-400 max-w-xl mx-auto mt-3">
               Connect with opportunities worldwide. Work remotely from anywhere
               or find on-site roles across continents.
             </p>
           </div>
           
-          <div className="relative p-4 rounded-2xl border border-neutral-800/50 bg-neutral-950/50 backdrop-blur-sm">
-            <WorldMap dots={worldMapDots} lineColor="#6366f1" />
+          <div className="relative p-4 rounded-2xl border border-zinc-800/50 bg-zinc-950/50 backdrop-blur-sm">
+            <WorldMap dots={worldMapDots} lineColor="#0ea5e9" />
           </div>
         </motion.div>
       </div>
