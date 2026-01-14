@@ -25,22 +25,23 @@ export default function Onboarding() {
     const [verificationCode, setVerificationCode] = useState('')
     const [loading, setLoading] = useState(false)
 
-    const handleRoleSelect = async (selectedRole) => {
+    const handleRoleSelect = (selectedRole) => {
         setRole(selectedRole)
-        setLoading(true)
+        if (selectedRole === 'corporate') {
+            setStep('company')
+        } else {
+            setStep('verify')
+        }
+    }
 
+    const handleStudentSubmit = async () => {
+        setLoading(true)
         try {
             await fellowshipApi.createProfile({
-                role: selectedRole,
-                companyName: selectedRole === 'corporate' ? companyName : null,
-                collegeName: selectedRole === 'student' ? collegeName : null
+                role: 'student',
+                collegeName: collegeName || null
             })
-
-            if (selectedRole === 'corporate') {
-                setStep('company')
-            } else {
-                setStep('verify')
-            }
+            setStep('verify')
         } catch (error) {
             toast.error(error.message || 'Failed to save role')
         } finally {
