@@ -18,6 +18,7 @@ import jobTrackerRoutes from './routes/jobTracker.js';
 import jobAlertRoutes from './routes/jobAlerts.js';
 import communityRoutes from './routes/community.js';
 import adminRoutes from './routes/admin.js';
+import fellowshipRoutes from './routes/fellowships.js';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js';
@@ -81,6 +82,7 @@ app.use('/api/job-tracker', jobTrackerRoutes);
 app.use('/api/job-alerts', jobAlertRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/fellowship', fellowshipRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -101,14 +103,14 @@ const startServer = async () => {
     // Connect to MongoDB
     const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/velocity';
     mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 5000 })
-  .then(() => console.log('📦 Connected to MongoDB'))
-  .catch(err =>
-    console.error('❌ MongoDB connection failed:', err.message)
-  );
+      .then(() => console.log('📦 Connected to MongoDB'))
+      .catch(err =>
+        console.error('❌ MongoDB connection failed:', err.message)
+      );
 
     // await mongoose.connect(mongoUri);
     // console.log('📦 Connected to MongoDB');
-    
+
     // Start server with HTTP server (for Socket.IO)
     // Initialize default community channels
     try {

@@ -1,0 +1,69 @@
+import mongoose from 'mongoose';
+
+const proposalSchema = new mongoose.Schema({
+    challengeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Challenge',
+        required: true,
+        index: true
+    },
+    studentId: {
+        type: String,
+        required: true,
+        index: true
+    },
+    studentName: {
+        type: String,
+        required: true
+    },
+    studentEmail: {
+        type: String,
+        required: true
+    },
+    coverLetter: {
+        type: String,
+        required: true,
+        minlength: 100
+    },
+    proposedPrice: {
+        type: Number,
+        required: true
+    },
+    estimatedDays: {
+        type: Number,
+        required: true,
+        min: 1
+    },
+    portfolioLinks: [{
+        type: String
+    }],
+    status: {
+        type: String,
+        enum: ['pending', 'shortlisted', 'accepted', 'rejected', 'withdrawn'],
+        default: 'pending',
+        index: true
+    },
+    corporateFeedback: {
+        type: String,
+        default: null
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+proposalSchema.index({ challengeId: 1, studentId: 1 }, { unique: true });
+proposalSchema.index({ studentId: 1, status: 1 });
+
+proposalSchema.pre('save', function () {
+    this.updatedAt = new Date();
+});
+
+const Proposal = mongoose.model('Proposal', proposalSchema);
+
+export default Proposal;

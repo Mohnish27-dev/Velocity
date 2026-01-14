@@ -15,6 +15,13 @@ import JobSearch from './pages/JobSearch'
 import JobAlerts from './pages/JobAlerts'
 import JobTracker from './pages/JobTracker'
 import Community from './pages/Community'
+import FellowshipLayout from './pages/fellowship/FellowshipLayout'
+import Onboarding from './pages/fellowship/Onboarding'
+import Challenges from './pages/fellowship/Challenges'
+import ChallengeDetail from './pages/fellowship/ChallengeDetail'
+import CreateChallenge from './pages/fellowship/CreateChallenge'
+import MyProposals from './pages/fellowship/MyProposals'
+import MyChallenges from './pages/fellowship/MyChallenges'
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -104,6 +111,17 @@ function App() {
             <Route path="/job-alerts" element={<ProtectedRoute><JobAlerts /></ProtectedRoute>} />
             <Route path="/job-tracker" element={<ProtectedRoute><JobTracker /></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+
+            {/* Fellowship Routes */}
+            <Route path="/fellowship" element={<ProtectedRoute><FellowshipLayout /></ProtectedRoute>}>
+              <Route index element={<Challenges />} />
+              <Route path="onboarding" element={<Onboarding />} />
+              <Route path="challenges" element={<Challenges />} />
+              <Route path="challenges/:id" element={<ChallengeDetail />} />
+              <Route path="create-challenge" element={<CreateChallenge />} />
+              <Route path="my-proposals" element={<MyProposals />} />
+              <Route path="my-challenges" element={<MyChallenges />} />
+            </Route>
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />

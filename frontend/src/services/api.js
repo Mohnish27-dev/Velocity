@@ -597,3 +597,128 @@ export const communityApi = {
   }
 }
 
+export const fellowshipApi = {
+  async getProfile() {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/profile`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async createProfile(data) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/profile`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async sendVerificationEmail(email) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/verify/send-email`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ email })
+    })
+    return handleResponse(response)
+  },
+
+  async confirmVerification(code) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/verify/confirm`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ code })
+    })
+    return handleResponse(response)
+  },
+
+  async getChallenges(params = {}) {
+    const headers = await getAuthHeaders()
+    const query = new URLSearchParams(params).toString()
+    const response = await fetch(`${API_BASE}/fellowship/challenges?${query}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async getChallenge(id) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/challenges/${id}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async createChallenge(data) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/challenges`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async getMyChallenges() {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/my-challenges`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async applyToChallenge(challengeId, data) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/challenges/${challengeId}/apply`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async getMyProposals() {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/my-proposals`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async getChallengeProposals(challengeId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/challenges/${challengeId}/proposals`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async updateProposalStatus(proposalId, status, feedback) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/proposals/${proposalId}/status`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ status, feedback })
+    })
+    return handleResponse(response)
+  },
+
+  async getStats() {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/stats`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  }
+}

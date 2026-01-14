@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
-import { 
-  FileText, 
-  Briefcase, 
-  Search, 
+import {
+  FileText,
+  Briefcase,
+  Search,
   Plus,
   ArrowRight,
   CheckCircle2,
@@ -17,7 +17,8 @@ import {
   TrendingUp,
   Clock,
   Users,
-  Sparkles
+  Sparkles,
+  GraduationCap
 } from 'lucide-react'
 import { resumeApi, jobTrackerApi } from '../services/api'
 import Navbar from '../components/Navbar'
@@ -52,11 +53,11 @@ export default function Dashboard() {
         resumeApi.getAll().catch(() => ({ resumes: [] })),
         jobTrackerApi.getAll().catch(() => ({ trackedJobs: [] }))
       ])
-      
+
       setResumes(resumeRes.resumes || resumeRes.data?.resumes || [])
       const jobs = jobsRes.trackedJobs || []
       setTrackedJobs(jobs)
-      
+
       const stats = {
         total: jobs.length,
         saved: jobs.filter(j => j.status === 'saved').length,
@@ -95,7 +96,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-black">
       <Navbar />
-      
+
       {/* Background Effects - Subtle */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-sky-500/5 rounded-full blur-3xl" />
@@ -104,7 +105,7 @@ export default function Dashboard() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
@@ -181,6 +182,20 @@ export default function Dashboard() {
                   <ArrowRight className="absolute bottom-6 right-6 w-5 h-5 text-zinc-600 group-hover:translate-x-1 group-hover:text-zinc-400 transition-all" />
                 </div>
               </Link>
+
+              <Link to="/fellowship" className="group">
+                <div className="relative p-6 rounded-2xl bg-gradient-to-br from-emerald-950/50 to-zinc-900 border border-emerald-900/50 overflow-hidden transition-all duration-300 hover:border-emerald-700/50 hover:shadow-lg hover:shadow-emerald-900/20">
+                  <div className="absolute top-2 right-2 px-2 py-0.5 bg-emerald-500/20 rounded text-[10px] text-emerald-400 font-medium">NEW</div>
+                  <div className="relative">
+                    <div className="w-12 h-12 bg-emerald-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center mb-4">
+                      <GraduationCap className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-1">Fellowships</h3>
+                    <p className="text-zinc-500 text-sm">Earn while learning</p>
+                  </div>
+                  <ArrowRight className="absolute bottom-6 right-6 w-5 h-5 text-emerald-600 group-hover:translate-x-1 group-hover:text-emerald-400 transition-all" />
+                </div>
+              </Link>
             </motion.div>
 
             {/* Stats Row */}
@@ -214,7 +229,7 @@ export default function Dashboard() {
                     View all <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
-                
+
                 {trackedJobs.length === 0 ? (
                   <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 text-center py-12">
                     <Briefcase className="w-12 h-12 text-zinc-700 mx-auto mb-3" />
@@ -261,7 +276,7 @@ export default function Dashboard() {
                     Upload new <Plus className="w-4 h-4" />
                   </Link>
                 </div>
-                
+
                 {resumes.length === 0 ? (
                   <div className="rounded-xl bg-zinc-900/50 border border-zinc-800 text-center py-12">
                     <FileText className="w-12 h-12 text-zinc-700 mx-auto mb-3" />

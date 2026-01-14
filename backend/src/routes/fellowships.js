@@ -1,0 +1,463 @@
+import express from 'express';
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
+import { verifyToken } from '../middleware/auth.js';
+import { asyncHandler, ApiError } from '../middleware/errorHandler.js';
+import FellowshipProfile from '../models/FellowshipProfile.model.js';
+import Challenge from '../models/Challenge.model.js';
+import Proposal from '../models/Proposal.model.js';
+
+const router = express.Router();
+
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: parseInt(process.env.EMAIL_PORT || '587'),
+    secure: false,
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
+});
+
+const ACADEMIC_DOMAINS = ['.edu', '.ac.in', '.edu.in', '.edu.au', '.ac.uk', '.edu.pk'];
+
+const isAcademicEmail = (email) => {
+    return ACADEMIC_DOMAINS.some(domain => email.toLowerCase().endsWith(domain));
+};
+
+const generateVerificationCode = () => {
+    return crypto.randomInt(100000, 999999).toString();
+};
+
+router.get('/profile', verifyToken, asyncHandler(async (req, res) => {
+    const profile = await FellowshipProfile.findOne({ userId: req.user.uid }).lean();
+
+    res.json({
+        success: true,
+        data: profile || null
+    });
+}));
+
+router.post('/profile', verifyToken, asyncHandler(async (req, res) => {
+    const { role, companyName, collegeName, bio, skills } = req.body;
+
+    if (!role || !['student', 'corporate'].includes(role)) {
+        throw new ApiError(400, 'Valid role (student/corporate) is required');
+    }
+
+    if (role === 'corporate' && !companyName) {
+        throw new ApiError(400, 'Company name is required for corporate accounts');
+    }
+
+    let profile = await FellowshipProfile.findOne({ userId: req.user.uid });
+
+    if (profile) {
+        profile.role = role;
+        profile.companyName = companyName || profile.companyName;
+        profile.collegeName = collegeName || profile.collegeName;
+        profile.bio = bio || profile.bio;
+        profile.skills = skills || profile.skills;
+        await profile.save();
+    } else {
+        profile = await FellowshipProfile.create({
+            userId: req.user.uid,
+            role,
+            companyName,
+            collegeName,
+            bio,
+            skills,
+            isVerified: role === 'corporate'
+        });
+    }
+
+    res.json({
+        success: true,
+        data: profile
+    });
+}));
+
+router.post('/verify/send-email', verifyToken, asyncHandler(async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        throw new ApiError(400, 'Email is required');
+    }
+
+    const profile = await FellowshipProfile.findOne({ userId: req.user.uid });
+
+    if (!profile) {
+        throw new ApiError(400, 'Please complete onboarding first');
+    }
+
+    if (profile.isVerified) {
+        throw new ApiError(400, 'Already verified');
+    }
+
+    if (profile.role === 'student' && !isAcademicEmail(email)) {
+        throw new ApiError(400, 'Please use an academic email (.edu, .ac.in, etc.)');
+    }
+
+    const code = generateVerificationCode();
+    const expiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    profile.verificationCode = code;
+    profile.verificationCodeExpiry = expiry;
+    profile.verifiedEmail = email;
+    await profile.save();
+
+    await transporter.sendMail({
+        from: `"Velocity Fellowships" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: 'Verify Your Fellowship Account',
+        html: `
+      <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #10b981;">Velocity Fellowships</h2>
+        <p>Your verification code is:</p>
+        <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1f2937;">${code}</span>
+        </div>
+        <p style="color: #6b7280;">This code expires in 10 minutes.</p>
+        <p style="color: #6b7280; font-size: 12px;">If you didn't request this, please ignore this email.</p>
+      </div>
+    `
+    });
+
+    res.json({
+        success: true,
+        message: 'Verification code sent to your email'
+    });
+}));
+
+router.post('/verify/confirm', verifyToken, asyncHandler(async (req, res) => {
+    const { code } = req.body;
+
+    if (!code) {
+        throw new ApiError(400, 'Verification code is required');
+    }
+
+    const profile = await FellowshipProfile.findOne({ userId: req.user.uid });
+
+    if (!profile) {
+        throw new ApiError(400, 'Profile not found');
+    }
+
+    if (profile.isVerified) {
+        throw new ApiError(400, 'Already verified');
+    }
+
+    if (!profile.verificationCode || !profile.verificationCodeExpiry) {
+        throw new ApiError(400, 'No verification pending. Please request a new code.');
+    }
+
+    if (new Date() > profile.verificationCodeExpiry) {
+        throw new ApiError(400, 'Verification code expired. Please request a new one.');
+    }
+
+    if (profile.verificationCode !== code) {
+        throw new ApiError(400, 'Invalid verification code');
+    }
+
+    profile.isVerified = true;
+    profile.verificationCode = null;
+    profile.verificationCodeExpiry = null;
+    await profile.save();
+
+    res.json({
+        success: true,
+        message: 'Email verified successfully'
+    });
+}));
+
+router.get('/challenges', verifyToken, asyncHandler(async (req, res) => {
+    const { category, status = 'open', limit = 50, offset = 0 } = req.query;
+
+    const query = { status };
+    if (category && category !== 'all') {
+        query.category = category;
+    }
+
+    const challenges = await Challenge.find(query)
+        .sort({ createdAt: -1 })
+        .skip(parseInt(offset))
+        .limit(parseInt(limit))
+        .lean();
+
+    const total = await Challenge.countDocuments(query);
+
+    res.json({
+        success: true,
+        data: {
+            challenges,
+            total,
+            hasMore: parseInt(offset) + challenges.length < total
+        }
+    });
+}));
+
+router.get('/challenges/:id', verifyToken, asyncHandler(async (req, res) => {
+    const challenge = await Challenge.findById(req.params.id).lean();
+
+    if (!challenge) {
+        throw new ApiError(404, 'Challenge not found');
+    }
+
+    res.json({
+        success: true,
+        data: challenge
+    });
+}));
+
+router.post('/challenges', verifyToken, asyncHandler(async (req, res) => {
+    const profile = await FellowshipProfile.findOne({ userId: req.user.uid });
+
+    if (!profile || profile.role !== 'corporate') {
+        throw new ApiError(403, 'Only corporate accounts can create challenges');
+    }
+
+    const { title, description, category, price, deadline, requirements } = req.body;
+
+    if (!title || title.length < 10) {
+        throw new ApiError(400, 'Title must be at least 10 characters');
+    }
+
+    if (!description || description.length < 50) {
+        throw new ApiError(400, 'Description must be at least 50 characters');
+    }
+
+    if (!category || !['design', 'content', 'development', 'research', 'marketing'].includes(category)) {
+        throw new ApiError(400, 'Valid category is required');
+    }
+
+    if (!price || price < 1000) {
+        throw new ApiError(400, 'Minimum price is ₹1000');
+    }
+
+    if (!deadline) {
+        throw new ApiError(400, 'Deadline is required');
+    }
+
+    const challenge = await Challenge.create({
+        title,
+        description,
+        category,
+        price,
+        deadline: new Date(deadline),
+        requirements: requirements || [],
+        corporateId: req.user.uid,
+        corporateName: req.user.name || 'Corporate',
+        companyName: profile.companyName || 'Company',
+        status: 'open'
+    });
+
+    profile.challengeCount = (profile.challengeCount || 0) + 1;
+    await profile.save();
+
+    res.status(201).json({
+        success: true,
+        data: challenge
+    });
+}));
+
+router.get('/my-challenges', verifyToken, asyncHandler(async (req, res) => {
+    const profile = await FellowshipProfile.findOne({ userId: req.user.uid });
+
+    if (!profile || profile.role !== 'corporate') {
+        throw new ApiError(403, 'Only corporate accounts can view their challenges');
+    }
+
+    const challenges = await Challenge.find({ corporateId: req.user.uid })
+        .sort({ createdAt: -1 })
+        .lean();
+
+    res.json({
+        success: true,
+        data: challenges
+    });
+}));
+
+router.post('/challenges/:id/apply', verifyToken, asyncHandler(async (req, res) => {
+    const profile = await FellowshipProfile.findOne({ userId: req.user.uid });
+
+    if (!profile || profile.role !== 'student') {
+        throw new ApiError(403, 'Only student accounts can apply to challenges');
+    }
+
+    if (!profile.isVerified) {
+        throw new ApiError(403, 'Please verify your student status first');
+    }
+
+    const challenge = await Challenge.findById(req.params.id);
+
+    if (!challenge) {
+        throw new ApiError(404, 'Challenge not found');
+    }
+
+    if (challenge.status !== 'open') {
+        throw new ApiError(400, 'This challenge is no longer accepting applications');
+    }
+
+    const existingProposal = await Proposal.findOne({
+        challengeId: challenge._id,
+        studentId: req.user.uid
+    });
+
+    if (existingProposal) {
+        throw new ApiError(400, 'You have already applied to this challenge');
+    }
+
+    const { coverLetter, proposedPrice, estimatedDays, portfolioLinks } = req.body;
+
+    if (!coverLetter || coverLetter.length < 100) {
+        throw new ApiError(400, 'Cover letter must be at least 100 characters');
+    }
+
+    if (!proposedPrice || proposedPrice < 500) {
+        throw new ApiError(400, 'Minimum proposed price is ₹500');
+    }
+
+    if (!estimatedDays || estimatedDays < 1) {
+        throw new ApiError(400, 'Estimated days must be at least 1');
+    }
+
+    const proposal = await Proposal.create({
+        challengeId: challenge._id,
+        studentId: req.user.uid,
+        studentName: req.user.name || 'Student',
+        studentEmail: req.user.email,
+        coverLetter,
+        proposedPrice,
+        estimatedDays,
+        portfolioLinks: portfolioLinks || [],
+        status: 'pending'
+    });
+
+    challenge.proposalCount = (challenge.proposalCount || 0) + 1;
+    await challenge.save();
+
+    profile.proposalCount = (profile.proposalCount || 0) + 1;
+    await profile.save();
+
+    res.status(201).json({
+        success: true,
+        data: proposal
+    });
+}));
+
+router.get('/my-proposals', verifyToken, asyncHandler(async (req, res) => {
+    const profile = await FellowshipProfile.findOne({ userId: req.user.uid });
+
+    if (!profile || profile.role !== 'student') {
+        throw new ApiError(403, 'Only student accounts can view their proposals');
+    }
+
+    const proposals = await Proposal.find({ studentId: req.user.uid })
+        .sort({ createdAt: -1 })
+        .lean();
+
+    const challengeIds = [...new Set(proposals.map(p => p.challengeId))];
+    const challenges = await Challenge.find({ _id: { $in: challengeIds } }).lean();
+    const challengeMap = Object.fromEntries(challenges.map(c => [c._id.toString(), c]));
+
+    const proposalsWithChallenge = proposals.map(p => ({
+        ...p,
+        challenge: challengeMap[p.challengeId.toString()] || null
+    }));
+
+    res.json({
+        success: true,
+        data: proposalsWithChallenge
+    });
+}));
+
+router.get('/challenges/:id/proposals', verifyToken, asyncHandler(async (req, res) => {
+    const challenge = await Challenge.findById(req.params.id);
+
+    if (!challenge) {
+        throw new ApiError(404, 'Challenge not found');
+    }
+
+    if (challenge.corporateId !== req.user.uid) {
+        throw new ApiError(403, 'Only the challenge creator can view proposals');
+    }
+
+    const proposals = await Proposal.find({ challengeId: challenge._id })
+        .sort({ createdAt: -1 })
+        .lean();
+
+    res.json({
+        success: true,
+        data: proposals
+    });
+}));
+
+router.put('/proposals/:id/status', verifyToken, asyncHandler(async (req, res) => {
+    const { status, feedback } = req.body;
+
+    if (!status || !['shortlisted', 'accepted', 'rejected'].includes(status)) {
+        throw new ApiError(400, 'Valid status is required');
+    }
+
+    const proposal = await Proposal.findById(req.params.id);
+
+    if (!proposal) {
+        throw new ApiError(404, 'Proposal not found');
+    }
+
+    const challenge = await Challenge.findById(proposal.challengeId);
+
+    if (!challenge || challenge.corporateId !== req.user.uid) {
+        throw new ApiError(403, 'Only the challenge creator can update proposal status');
+    }
+
+    proposal.status = status;
+    if (feedback) {
+        proposal.corporateFeedback = feedback;
+    }
+    await proposal.save();
+
+    if (status === 'accepted') {
+        challenge.status = 'in_progress';
+        challenge.selectedProposalId = proposal._id;
+        await challenge.save();
+    }
+
+    res.json({
+        success: true,
+        data: proposal
+    });
+}));
+
+router.get('/stats', verifyToken, asyncHandler(async (req, res) => {
+    const profile = await FellowshipProfile.findOne({ userId: req.user.uid }).lean();
+
+    const openChallenges = await Challenge.countDocuments({ status: 'open' });
+
+    let stats = {
+        openChallenges,
+        role: profile?.role || null,
+        isVerified: profile?.isVerified || false
+    };
+
+    if (profile?.role === 'student') {
+        stats.proposalCount = profile.proposalCount || 0;
+        stats.acceptedProposals = await Proposal.countDocuments({
+            studentId: req.user.uid,
+            status: 'accepted'
+        });
+    } else if (profile?.role === 'corporate') {
+        stats.challengeCount = profile.challengeCount || 0;
+        stats.totalProposalsReceived = await Proposal.countDocuments({
+            challengeId: { $in: await Challenge.find({ corporateId: req.user.uid }).distinct('_id') }
+        });
+    }
+
+    res.json({
+        success: true,
+        data: stats
+    });
+}));
+
+export default router;
