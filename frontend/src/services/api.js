@@ -771,3 +771,52 @@ export const fellowshipApi = {
     return handleResponse(response)
   }
 }
+
+export const interviewApi = {
+  async startInterview(formData) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/interview/start`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(formData)
+    })
+    return handleResponse(response)
+  },
+
+  async submitAnswer(interviewId, data) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/interview/${interviewId}/answer`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  async completeInterview(interviewId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/interview/${interviewId}/complete`, {
+      method: 'POST',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async getInterview(interviewId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/interview/${interviewId}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async getHistory() {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/interview/history`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  }
+}

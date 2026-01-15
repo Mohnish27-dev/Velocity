@@ -12,7 +12,8 @@ import {
   User,
   Bell,
   Users,
-  GraduationCap
+  GraduationCap,
+  Mic
 } from 'lucide-react'
 
 export default function Navbar() {
@@ -43,6 +44,7 @@ export default function Navbar() {
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { path: '/jobs', label: 'Find Jobs', icon: Search },
     { path: '/job-alerts', label: 'Alerts', icon: Bell },
+    { path: '/interview-prep', label: 'Interview', icon: Mic },
     { path: '/fellowship', label: 'Fellowship', icon: GraduationCap },
     { path: '/community', label: 'Community', icon: Users },
     { path: '/upload', label: 'Resume', icon: FileText },
@@ -50,8 +52,8 @@ export default function Navbar() {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
-        ? 'bg-black/80 backdrop-blur-xl border-b border-zinc-800'
-        : 'bg-transparent'
+      ? 'bg-black/80 backdrop-blur-xl border-b border-zinc-800'
+      : 'bg-transparent'
       }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
@@ -74,8 +76,8 @@ export default function Navbar() {
                     key={path}
                     to={path}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${isActive(path)
-                        ? 'bg-zinc-800 text-white'
-                        : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+                      ? 'bg-zinc-800 text-white'
+                      : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
                       }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -166,8 +168,8 @@ export default function Navbar() {
                     to={path}
                     onClick={() => setMobileMenuOpen(false)}
                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-all ${isActive(path)
-                        ? 'bg-zinc-800 text-white'
-                        : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'
+                      ? 'bg-zinc-800 text-white'
+                      : 'text-zinc-400 hover:bg-zinc-900 hover:text-white'
                       }`}
                   >
                     <Icon className="w-5 h-5" />

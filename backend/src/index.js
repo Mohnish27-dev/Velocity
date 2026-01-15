@@ -19,6 +19,7 @@ import jobAlertRoutes from './routes/jobAlerts.js';
 import communityRoutes from './routes/community.js';
 import adminRoutes from './routes/admin.js';
 import fellowshipRoutes from './routes/fellowships.js';
+import interviewRoutes from './routes/interview.js';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler.js';
@@ -85,6 +86,7 @@ app.use('/api/job-alerts', jobAlertRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/fellowship', fellowshipRoutes);
+app.use('/api/interview', interviewRoutes);
 
 // 404 handler
 app.use((req, res) => {

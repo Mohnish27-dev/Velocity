@@ -15,6 +15,7 @@ import JobSearch from './pages/JobSearch'
 import JobAlerts from './pages/JobAlerts'
 import JobTracker from './pages/JobTracker'
 import Community from './pages/Community'
+import InterviewPrep from './pages/InterviewPrep'
 import FellowshipLayout from './pages/fellowship/FellowshipLayout'
 import Onboarding from './pages/fellowship/Onboarding'
 import Challenges from './pages/fellowship/Challenges'
@@ -115,6 +116,7 @@ function App() {
             <Route path="/job-alerts" element={<ProtectedRoute><JobAlerts /></ProtectedRoute>} />
             <Route path="/job-tracker" element={<ProtectedRoute><JobTracker /></ProtectedRoute>} />
             <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+            <Route path="/interview-prep" element={<ProtectedRoute><InterviewPrep /></ProtectedRoute>} />
 
             {/* Fellowship Routes */}
             <Route path="/fellowship" element={<ProtectedRoute><FellowshipLayout /></ProtectedRoute>}>
