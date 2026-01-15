@@ -259,7 +259,6 @@ ${resumeText}`;
   }
 };
 
-// Power verbs for resume writing
 const POWER_VERBS = [
   'Led', 'Developed', 'Increased', 'Reduced', 'Achieved', 'Spearheaded', 'Pioneered',
   'Orchestrated', 'Transformed', 'Optimized', 'Streamlined', 'Launched', 'Designed',
@@ -272,7 +271,6 @@ const WEAK_VERBS = [
   'Was involved in', 'Handled', 'Did', 'Made', 'Used', 'Had'
 ];
 
-// Comprehensive resume analysis function - Senior Expert Level
 export const analyzeResumeComprehensive = async (resumeText, jobRole) => {
   try {
     const prompt = `You are a SENIOR RESUME EXPERT with 20+ years of experience helping candidates land jobs at top companies.
