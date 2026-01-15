@@ -22,6 +22,10 @@ import ChallengeDetail from './pages/fellowship/ChallengeDetail'
 import CreateChallenge from './pages/fellowship/CreateChallenge'
 import MyProposals from './pages/fellowship/MyProposals'
 import MyChallenges from './pages/fellowship/MyChallenges'
+import ChallengeProposals from './pages/fellowship/ChallengeProposals'
+import Verify from './pages/fellowship/Verify'
+import FellowshipMessages from './pages/fellowship/FellowshipMessages'
+import FellowshipChat from './pages/fellowship/FellowshipChat'
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -118,9 +122,13 @@ function App() {
               <Route path="onboarding" element={<Onboarding />} />
               <Route path="challenges" element={<Challenges />} />
               <Route path="challenges/:id" element={<ChallengeDetail />} />
+              <Route path="challenges/:id/proposals" element={<ChallengeProposals />} />
               <Route path="create-challenge" element={<CreateChallenge />} />
               <Route path="my-proposals" element={<MyProposals />} />
               <Route path="my-challenges" element={<MyChallenges />} />
+              <Route path="verify" element={<Verify />} />
+              <Route path="messages" element={<FellowshipMessages />} />
+              <Route path="messages/:roomId" element={<FellowshipChat />} />
             </Route>
 
             {/* Fallback */}

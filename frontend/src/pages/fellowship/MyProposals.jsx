@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useOutletContext, useNavigate } from 'react-router-dom'
 import { fellowshipApi } from '../../services/api'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
@@ -15,7 +15,6 @@ import {
 
 const STATUS_CONFIG = {
     pending: { label: 'Pending', color: 'bg-yellow-950 text-yellow-400', icon: Clock },
-    shortlisted: { label: 'Shortlisted', color: 'bg-blue-950 text-blue-400', icon: AlertCircle },
     accepted: { label: 'Accepted', color: 'bg-emerald-950 text-emerald-400', icon: CheckCircle },
     rejected: { label: 'Rejected', color: 'bg-red-950 text-red-400', icon: XCircle },
     withdrawn: { label: 'Withdrawn', color: 'bg-neutral-800 text-neutral-400', icon: XCircle },
@@ -23,19 +22,28 @@ const STATUS_CONFIG = {
 
 export default function MyProposals() {
     const { profile } = useOutletContext()
+    const navigate = useNavigate()
     const [proposals, setProposals] = useState([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        loadProposals()
-    }, [])
+        if (profile?.role === 'corporate') {
+            navigate('/fellowship/my-challenges')
+            return
+        }
+        if (profile?.role === 'student') {
+            loadProposals()
+        } else {
+            setLoading(false)
+        }
+    }, [profile])
 
     const loadProposals = async () => {
         try {
             const response = await fellowshipApi.getMyProposals()
             setProposals(response.data)
         } catch (error) {
-            toast.error('Failed to load proposals')
+            console.error('Failed to load proposals:', error)
         } finally {
             setLoading(false)
         }

@@ -12,7 +12,9 @@ import {
     Loader2,
     Send,
     CheckCircle,
-    AlertCircle
+    AlertCircle,
+    FileText,
+    Users
 } from 'lucide-react'
 
 const CATEGORIES = {
@@ -32,7 +34,6 @@ export default function ChallengeDetail() {
     const [applying, setApplying] = useState(false)
     const [showApplyForm, setShowApplyForm] = useState(false)
     const [coverLetter, setCoverLetter] = useState('')
-    const [proposedPrice, setProposedPrice] = useState('')
     const [estimatedDays, setEstimatedDays] = useState('')
     const [portfolioLinks, setPortfolioLinks] = useState('')
     const [applied, setApplied] = useState(false)
@@ -58,10 +59,6 @@ export default function ChallengeDetail() {
             toast.error('Cover letter must be at least 100 characters')
             return
         }
-        if (!proposedPrice || parseInt(proposedPrice) < 500) {
-            toast.error('Minimum proposed price is ₹500')
-            return
-        }
         if (!estimatedDays || parseInt(estimatedDays) < 1) {
             toast.error('Estimated days must be at least 1')
             return
@@ -71,7 +68,7 @@ export default function ChallengeDetail() {
         try {
             await fellowshipApi.applyToChallenge(id, {
                 coverLetter,
-                proposedPrice: parseInt(proposedPrice),
+                proposedPrice: challenge.price,
                 estimatedDays: parseInt(estimatedDays),
                 portfolioLinks: portfolioLinks.split('\n').filter(l => l.trim())
             })
@@ -107,60 +104,85 @@ export default function ChallengeDetail() {
                 className="flex items-center gap-2 text-neutral-400 hover:text-white text-sm"
             >
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                Back to Challenges
             </button>
 
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6"
+                className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden"
             >
-                <div className="flex items-start justify-between gap-4">
-                    <span className="px-3 py-1 bg-neutral-800 rounded-lg text-sm">
-                        {category.icon} {category.label}
-                    </span>
-                    <span className="text-2xl font-bold text-emerald-400">
-                        ₹{challenge.price.toLocaleString('en-IN')}
-                    </span>
-                </div>
-
-                <h1 className="mt-4 text-2xl font-bold text-white">{challenge.title}</h1>
-
-                <div className="mt-4 flex flex-wrap gap-4 text-sm text-neutral-400">
-                    <div className="flex items-center gap-1">
-                        <Building2 className="w-4 h-4" />
-                        {challenge.companyName}
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4" />
-                        Deadline: {new Date(challenge.deadline).toLocaleDateString()}
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        {daysLeft > 0 ? `${daysLeft} days left` : 'Expired'}
-                    </div>
-                </div>
-
-                <div className="mt-6">
-                    <h3 className="text-sm text-neutral-500 mb-2">Description</h3>
-                    <p className="text-neutral-300 whitespace-pre-wrap">{challenge.description}</p>
-                </div>
-
-                {challenge.requirements?.length > 0 && (
-                    <div className="mt-6">
-                        <h3 className="text-sm text-neutral-500 mb-2">Requirements</h3>
-                        <div className="flex flex-wrap gap-2">
-                            {challenge.requirements.map((req, i) => (
-                                <span key={i} className="px-3 py-1 bg-neutral-800 text-neutral-300 rounded-lg text-sm">
-                                    {req}
-                                </span>
-                            ))}
+                <div className="bg-gradient-to-r from-emerald-900/50 to-neutral-900 p-6 border-b border-neutral-800">
+                    <div className="flex items-start justify-between gap-4">
+                        <span className="px-3 py-1 bg-neutral-800/80 rounded-lg text-sm">
+                            {category.icon} {category.label}
+                        </span>
+                        <div className="text-right">
+                            <p className="text-xs text-neutral-400">Reward</p>
+                            <p className="text-2xl font-bold text-emerald-400">
+                                ₹{challenge.price.toLocaleString('en-IN')}
+                            </p>
                         </div>
                     </div>
-                )}
+                    <h1 className="mt-4 text-2xl font-bold text-white">{challenge.title}</h1>
+                </div>
 
-                <div className="mt-6 text-xs text-neutral-500">
-                    {challenge.proposalCount || 0} proposals received
+                <div className="p-6 space-y-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-neutral-800/50 rounded-xl p-4">
+                            <div className="flex items-center gap-2 text-neutral-400 text-xs mb-1">
+                                <Building2 className="w-3 h-3" />
+                                Company
+                            </div>
+                            <p className="text-white font-medium truncate">{challenge.companyName}</p>
+                        </div>
+                        <div className="bg-neutral-800/50 rounded-xl p-4">
+                            <div className="flex items-center gap-2 text-neutral-400 text-xs mb-1">
+                                <Calendar className="w-3 h-3" />
+                                Deadline
+                            </div>
+                            <p className="text-white font-medium">{new Date(challenge.deadline).toLocaleDateString()}</p>
+                        </div>
+                        <div className="bg-neutral-800/50 rounded-xl p-4">
+                            <div className="flex items-center gap-2 text-neutral-400 text-xs mb-1">
+                                <Clock className="w-3 h-3" />
+                                Time Left
+                            </div>
+                            <p className={`font-medium ${daysLeft > 0 ? 'text-white' : 'text-red-400'}`}>
+                                {daysLeft > 0 ? `${daysLeft} days` : 'Expired'}
+                            </p>
+                        </div>
+                        <div className="bg-neutral-800/50 rounded-xl p-4">
+                            <div className="flex items-center gap-2 text-neutral-400 text-xs mb-1">
+                                <Users className="w-3 h-3" />
+                                Proposals
+                            </div>
+                            <p className="text-white font-medium">{challenge.proposalCount || 0}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 className="flex items-center gap-2 text-sm font-medium text-neutral-300 mb-3">
+                            <FileText className="w-4 h-4" />
+                            Project Description
+                        </h3>
+                        <div className="bg-neutral-800/30 rounded-xl p-4">
+                            <p className="text-neutral-300 whitespace-pre-wrap leading-relaxed">{challenge.description}</p>
+                        </div>
+                    </div>
+
+                    {challenge.requirements?.length > 0 && (
+                        <div>
+                            <h3 className="text-sm font-medium text-neutral-300 mb-3">Required Skills</h3>
+                            <div className="flex flex-wrap gap-2">
+                                {challenge.requirements.map((req, i) => (
+                                    <span key={i} className="px-3 py-1.5 bg-emerald-950 text-emerald-300 rounded-lg text-sm">
+                                        {req}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             </motion.div>
 
@@ -204,51 +226,49 @@ export default function ChallengeDetail() {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4"
+                    className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-5"
                 >
-                    <h2 className="text-lg font-semibold text-white">Submit Your Proposal</h2>
+                    <div className="flex items-center justify-between">
+                        <h2 className="text-lg font-semibold text-white">Submit Your Proposal</h2>
+                        <div className="text-right">
+                            <p className="text-xs text-neutral-400">You will earn</p>
+                            <p className="text-lg font-bold text-emerald-400">₹{challenge.price.toLocaleString('en-IN')}</p>
+                        </div>
+                    </div>
+
+                    <div className="bg-neutral-800/50 rounded-xl p-4 border border-neutral-700">
+                        <p className="text-sm text-neutral-400 mb-2">You're applying for:</p>
+                        <p className="text-white font-medium">{challenge.title}</p>
+                        <p className="text-sm text-neutral-500 mt-1">by {challenge.companyName}</p>
+                    </div>
 
                     <div>
                         <label className="block text-sm text-neutral-400 mb-2">Cover Letter *</label>
                         <textarea
                             value={coverLetter}
                             onChange={(e) => setCoverLetter(e.target.value)}
-                            placeholder="Explain why you're the right fit for this challenge..."
-                            rows={5}
+                            placeholder="Explain why you're the right fit for this challenge. Describe your relevant experience, approach, and what makes you uniquely qualified..."
+                            rows={6}
                             className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500 resize-none"
                         />
-                        <p className="mt-1 text-xs text-neutral-500">{coverLetter.length}/100 minimum</p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm text-neutral-400 mb-2">Your Price (₹) *</label>
-                            <div className="relative">
-                                <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
-                                <input
-                                    type="number"
-                                    value={proposedPrice}
-                                    onChange={(e) => setProposedPrice(e.target.value)}
-                                    placeholder={challenge.price.toString()}
-                                    className="w-full pl-10 pr-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm text-neutral-400 mb-2">Days to Complete *</label>
-                            <input
-                                type="number"
-                                value={estimatedDays}
-                                onChange={(e) => setEstimatedDays(e.target.value)}
-                                placeholder="7"
-                                min="1"
-                                className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
-                            />
-                        </div>
+                        <p className="mt-1 text-xs text-neutral-500">{coverLetter.length}/100 minimum characters</p>
                     </div>
 
                     <div>
-                        <label className="block text-sm text-neutral-400 mb-2">Portfolio Links (one per line)</label>
+                        <label className="block text-sm text-neutral-400 mb-2">Days to Complete *</label>
+                        <input
+                            type="number"
+                            value={estimatedDays}
+                            onChange={(e) => setEstimatedDays(e.target.value)}
+                            placeholder="e.g., 7"
+                            min="1"
+                            className="w-full px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white placeholder-neutral-500 focus:outline-none focus:border-emerald-500"
+                        />
+                        <p className="mt-1 text-xs text-neutral-500">How many days do you need to complete this project?</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm text-neutral-400 mb-2">Portfolio Links (optional, one per line)</label>
                         <textarea
                             value={portfolioLinks}
                             onChange={(e) => setPortfolioLinks(e.target.value)}
@@ -258,7 +278,7 @@ export default function ChallengeDetail() {
                         />
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 pt-2">
                         <button
                             onClick={() => setShowApplyForm(false)}
                             className="px-6 py-3 bg-neutral-800 text-neutral-300 rounded-xl font-medium hover:bg-neutral-700"

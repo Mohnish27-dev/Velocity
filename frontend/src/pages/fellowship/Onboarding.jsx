@@ -75,6 +75,10 @@ export default function Onboarding() {
 
         setLoading(true)
         try {
+            await fellowshipApi.createProfile({
+                role: 'student',
+                collegeName: collegeName || null
+            })
             await fellowshipApi.sendVerificationEmail(email)
             toast.success('Verification code sent!')
             setStep('code')

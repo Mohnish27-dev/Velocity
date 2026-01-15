@@ -14,7 +14,7 @@ export const setupSocketHandlers = (io, socket) => {
   const user = socket.user;
 
   // ============ JOB ALERT EVENTS ============
-  
+
   // Client can request job alert status
   socket.on('request_job_alerts_status', async () => {
     try {
@@ -142,9 +142,9 @@ export const setupSocketHandlers = (io, socket) => {
       }
 
       const docRef = await messagesRef.add(messageData);
-      const savedMessage = { 
-        id: docRef.id, 
-        ...messageData, 
+      const savedMessage = {
+        id: docRef.id,
+        ...messageData,
         createdAt: new Date(),
         updatedAt: new Date()
       };
@@ -204,7 +204,7 @@ export const setupSocketHandlers = (io, socket) => {
 
       // Find existing reaction with same emoji
       const reactionIndex = reactions.findIndex(r => r.emoji === emoji);
-      
+
       if (reactionIndex >= 0) {
         // Check if user already reacted
         const userReacted = reactions[reactionIndex].users.some(u => u.uid === user.uid);
@@ -605,6 +605,38 @@ export const setupSocketHandlers = (io, socket) => {
       uid: user.uid,
       status,
       timestamp: new Date()
+    });
+  });
+
+  // ============ FELLOWSHIP CHAT EVENTS ============
+
+  socket.on('join_fellowship_chat', ({ roomId }) => {
+    socket.join(`fellowship:${roomId}`);
+    console.log(`${user.name} joined fellowship chat: ${roomId}`);
+  });
+
+  socket.on('leave_fellowship_chat', ({ roomId }) => {
+    socket.leave(`fellowship:${roomId}`);
+  });
+
+  socket.on('fellowship_message', ({ roomId, message }) => {
+    socket.to(`fellowship:${roomId}`).emit('fellowship_message', {
+      roomId,
+      message
+    });
+  });
+
+  socket.on('fellowship_typing_start', ({ roomId }) => {
+    socket.to(`fellowship:${roomId}`).emit('fellowship_typing', {
+      roomId,
+      user: { uid: user.uid, name: user.name }
+    });
+  });
+
+  socket.on('fellowship_typing_stop', ({ roomId }) => {
+    socket.to(`fellowship:${roomId}`).emit('fellowship_stopped_typing', {
+      roomId,
+      user: { uid: user.uid, name: user.name }
     });
   });
 };

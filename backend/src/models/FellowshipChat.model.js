@@ -1,0 +1,83 @@
+import mongoose from 'mongoose';
+
+const fellowshipChatRoomSchema = new mongoose.Schema({
+    proposalId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Proposal',
+        required: true
+    },
+    challengeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Challenge',
+        required: true
+    },
+    studentId: {
+        type: String,
+        required: true,
+        index: true
+    },
+    corporateId: {
+        type: String,
+        required: true,
+        index: true
+    },
+    studentName: String,
+    corporateName: String,
+    challengeTitle: String,
+    status: {
+        type: String,
+        enum: ['active', 'closed'],
+        default: 'active'
+    },
+    lastMessageAt: {
+        type: Date,
+        default: Date.now
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+fellowshipChatRoomSchema.index({ proposalId: 1 }, { unique: true });
+fellowshipChatRoomSchema.index({ studentId: 1, status: 1 });
+fellowshipChatRoomSchema.index({ corporateId: 1, status: 1 });
+
+const FellowshipChatRoom = mongoose.model('FellowshipChatRoom', fellowshipChatRoomSchema);
+
+const fellowshipMessageSchema = new mongoose.Schema({
+    roomId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'FellowshipChatRoom',
+        required: true,
+        index: true
+    },
+    senderId: {
+        type: String,
+        required: true
+    },
+    senderName: {
+        type: String,
+        required: true
+    },
+    senderRole: {
+        type: String,
+        enum: ['student', 'corporate'],
+        required: true
+    },
+    content: {
+        type: String,
+        required: true,
+        maxlength: 2000
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+fellowshipMessageSchema.index({ roomId: 1, createdAt: -1 });
+
+const FellowshipMessage = mongoose.model('FellowshipMessage', fellowshipMessageSchema);
+
+export { FellowshipChatRoom, FellowshipMessage };

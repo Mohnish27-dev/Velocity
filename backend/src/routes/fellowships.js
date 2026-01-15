@@ -6,6 +6,7 @@ import { asyncHandler, ApiError } from '../middleware/errorHandler.js';
 import FellowshipProfile from '../models/FellowshipProfile.model.js';
 import Challenge from '../models/Challenge.model.js';
 import Proposal from '../models/Proposal.model.js';
+import { FellowshipChatRoom, FellowshipMessage } from '../models/FellowshipChat.model.js';
 
 const router = express.Router();
 
@@ -278,6 +279,38 @@ router.get('/my-challenges', verifyToken, asyncHandler(async (req, res) => {
     });
 }));
 
+router.delete('/challenges/:id', verifyToken, asyncHandler(async (req, res) => {
+    const profile = await FellowshipProfile.findOne({ userId: req.user.uid });
+
+    if (!profile || profile.role !== 'corporate') {
+        throw new ApiError(403, 'Only corporate accounts can delete challenges');
+    }
+
+    const challenge = await Challenge.findById(req.params.id);
+
+    if (!challenge) {
+        throw new ApiError(404, 'Challenge not found');
+    }
+
+    if (challenge.corporateId !== req.user.uid) {
+        throw new ApiError(403, 'You can only delete your own challenges');
+    }
+
+    await Proposal.deleteMany({ challengeId: challenge._id });
+
+    await FellowshipChatRoom.deleteMany({ challengeId: challenge._id });
+
+    await Challenge.findByIdAndDelete(req.params.id);
+
+    profile.challengeCount = Math.max(0, (profile.challengeCount || 1) - 1);
+    await profile.save();
+
+    res.json({
+        success: true,
+        message: 'Challenge deleted successfully'
+    });
+}));
+
 router.post('/challenges/:id/apply', verifyToken, asyncHandler(async (req, res) => {
     const profile = await FellowshipProfile.findOne({ userId: req.user.uid });
 
@@ -396,7 +429,7 @@ router.get('/challenges/:id/proposals', verifyToken, asyncHandler(async (req, re
 router.put('/proposals/:id/status', verifyToken, asyncHandler(async (req, res) => {
     const { status, feedback } = req.body;
 
-    if (!status || !['shortlisted', 'accepted', 'rejected'].includes(status)) {
+    if (!status || !['accepted', 'rejected'].includes(status)) {
         throw new ApiError(400, 'Valid status is required');
     }
 
@@ -418,16 +451,153 @@ router.put('/proposals/:id/status', verifyToken, asyncHandler(async (req, res) =
     }
     await proposal.save();
 
+    let chatRoom = null;
     if (status === 'accepted') {
         challenge.status = 'in_progress';
         challenge.selectedProposalId = proposal._id;
         await challenge.save();
+
+        const existingRoom = await FellowshipChatRoom.findOne({ proposalId: proposal._id });
+        if (!existingRoom) {
+            chatRoom = await FellowshipChatRoom.create({
+                proposalId: proposal._id,
+                challengeId: challenge._id,
+                studentId: proposal.studentId,
+                corporateId: challenge.corporateId,
+                studentName: proposal.studentName,
+                corporateName: challenge.corporateName,
+                challengeTitle: challenge.title
+            });
+        } else {
+            chatRoom = existingRoom;
+        }
     }
 
     res.json({
         success: true,
-        data: proposal
+        data: proposal,
+        chatRoom: chatRoom
     });
+}));
+
+router.get('/chat/rooms', verifyToken, asyncHandler(async (req, res) => {
+    const profile = await FellowshipProfile.findOne({ userId: req.user.uid });
+    if (!profile) {
+        throw new ApiError(404, 'Profile not found');
+    }
+
+    let query = { status: 'active' };
+    if (profile.role === 'student') {
+        query.studentId = req.user.uid;
+    } else {
+        query.corporateId = req.user.uid;
+    }
+
+    const rooms = await FellowshipChatRoom.find(query)
+        .sort({ lastMessageAt: -1 })
+        .lean();
+
+    res.json({ success: true, data: rooms });
+}));
+
+router.get('/chat/rooms/:roomId', verifyToken, asyncHandler(async (req, res) => {
+    const room = await FellowshipChatRoom.findById(req.params.roomId).lean();
+    if (!room) {
+        throw new ApiError(404, 'Chat room not found');
+    }
+
+    if (room.studentId !== req.user.uid && room.corporateId !== req.user.uid) {
+        throw new ApiError(403, 'Access denied');
+    }
+
+    res.json({ success: true, data: room });
+}));
+
+router.get('/chat/rooms/:roomId/messages', verifyToken, asyncHandler(async (req, res) => {
+    const room = await FellowshipChatRoom.findById(req.params.roomId);
+    if (!room) {
+        throw new ApiError(404, 'Chat room not found');
+    }
+
+    if (room.studentId !== req.user.uid && room.corporateId !== req.user.uid) {
+        throw new ApiError(403, 'Access denied');
+    }
+
+    const limit = parseInt(req.query.limit) || 50;
+    const before = req.query.before;
+
+    let query = { roomId: room._id };
+    if (before) {
+        query.createdAt = { $lt: new Date(before) };
+    }
+
+    const messages = await FellowshipMessage.find(query)
+        .sort({ createdAt: -1 })
+        .limit(limit)
+        .lean();
+
+    res.json({ success: true, data: messages.reverse() });
+}));
+
+router.post('/chat/rooms/:roomId/messages', verifyToken, asyncHandler(async (req, res) => {
+    const room = await FellowshipChatRoom.findById(req.params.roomId);
+    if (!room) {
+        throw new ApiError(404, 'Chat room not found');
+    }
+
+    if (room.studentId !== req.user.uid && room.corporateId !== req.user.uid) {
+        throw new ApiError(403, 'Access denied');
+    }
+
+    const { content } = req.body;
+    if (!content || content.trim().length === 0) {
+        throw new ApiError(400, 'Message content is required');
+    }
+
+    const profile = await FellowshipProfile.findOne({ userId: req.user.uid });
+
+    const message = await FellowshipMessage.create({
+        roomId: room._id,
+        senderId: req.user.uid,
+        senderName: req.user.name || 'User',
+        senderRole: profile?.role || 'student',
+        content: content.trim()
+    });
+
+    room.lastMessageAt = new Date();
+    await room.save();
+
+    if (profile?.role === 'corporate') {
+        const studentProfile = await FellowshipProfile.findOne({ userId: room.studentId });
+        if (studentProfile?.verifiedEmail) {
+            transporter.sendMail({
+                from: `"Velocity Fellowships" <${process.env.EMAIL_USER}>`,
+                to: studentProfile.verifiedEmail,
+                subject: `New message from ${room.corporateName || 'Company'}`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+                        <h2 style="color: #10b981;">New Message</h2>
+                        <p>You have a new message from <strong>${room.corporateName || 'a company'}</strong> regarding:</p>
+                        <p style="background: #f3f4f6; padding: 12px; border-radius: 8px; color: #374151;">
+                            ${room.challengeTitle}
+                        </p>
+                        <p style="background: #e5e7eb; padding: 16px; border-radius: 8px; margin: 16px 0;">
+                            "${content.trim().substring(0, 200)}${content.length > 200 ? '...' : ''}"
+                        </p>
+                        <a href="${process.env.FRONTEND_URL}/fellowship/messages/${room._id}" 
+                           style="display: inline-block; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">
+                            Reply Now
+                        </a>
+                        <p style="color: #6b7280; font-size: 12px; margin-top: 20px;">
+                            This message was sent via Velocity Fellowships.
+                        </p>
+                    </div>
+                `
+            }).catch(err => console.error('Failed to send message notification:', err));
+        }
+    }
+
+    res.status(201).json({ success: true, data: message });
 }));
 
 router.get('/stats', verifyToken, asyncHandler(async (req, res) => {

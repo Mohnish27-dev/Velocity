@@ -14,14 +14,16 @@ import {
     Sparkles,
     Menu,
     X,
-    LogOut
+    LogOut,
+    MessageCircle
 } from 'lucide-react'
 
 const NAV_ITEMS = [
-    { title: 'Browse Challenges', href: '/fellowship/challenges', icon: Briefcase, roles: ['student', 'corporate'] },
+    { title: 'Browse Challenges', href: '/fellowship/challenges', icon: Briefcase, roles: ['student'] },
     { title: 'My Proposals', href: '/fellowship/my-proposals', icon: FileText, roles: ['student'] },
     { title: 'My Challenges', href: '/fellowship/my-challenges', icon: FolderKanban, roles: ['corporate'] },
     { title: 'Post Challenge', href: '/fellowship/create-challenge', icon: PlusCircle, roles: ['corporate'] },
+    { title: 'Messages', href: '/fellowship/messages', icon: MessageCircle, roles: ['student', 'corporate'] },
 ]
 
 export default function FellowshipLayout() {
@@ -47,6 +49,9 @@ export default function FellowshipLayout() {
 
             if (!response.data?.role && !location.pathname.includes('/onboarding')) {
                 navigate('/fellowship/onboarding')
+            } else if (response.data?.role === 'corporate' &&
+                (location.pathname === '/fellowship' || location.pathname === '/fellowship/challenges')) {
+                navigate('/fellowship/my-challenges')
             }
         } catch (error) {
             console.error('Error loading profile:', error)

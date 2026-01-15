@@ -8,9 +8,9 @@ import {
     Plus,
     Clock,
     Users,
-    CheckCircle,
-    XCircle,
-    IndianRupee
+    IndianRupee,
+    Trash2,
+    Loader2
 } from 'lucide-react'
 
 const STATUS_CONFIG = {
@@ -25,19 +25,43 @@ export default function MyChallenges() {
     const { profile } = useOutletContext()
     const [challenges, setChallenges] = useState([])
     const [loading, setLoading] = useState(true)
+    const [deleting, setDeleting] = useState(null)
+    const [confirmDelete, setConfirmDelete] = useState(null)
 
     useEffect(() => {
-        loadChallenges()
-    }, [])
+        if (profile?.role === 'student') {
+            navigate('/fellowship/my-proposals')
+            return
+        }
+        if (profile?.role === 'corporate') {
+            loadChallenges()
+        } else {
+            setLoading(false)
+        }
+    }, [profile])
 
     const loadChallenges = async () => {
         try {
             const response = await fellowshipApi.getMyChallenges()
             setChallenges(response.data)
         } catch (error) {
-            toast.error('Failed to load challenges')
+            console.error('Failed to load challenges:', error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleDelete = async (challengeId) => {
+        setDeleting(challengeId)
+        try {
+            await fellowshipApi.deleteChallenge(challengeId)
+            toast.success('Challenge deleted successfully')
+            setChallenges(prev => prev.filter(c => c._id !== challengeId))
+            setConfirmDelete(null)
+        } catch (error) {
+            toast.error(error.message || 'Failed to delete challenge')
+        } finally {
+            setDeleting(null)
         }
     }
 
@@ -131,6 +155,36 @@ export default function MyChallenges() {
                                             className="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-500"
                                         >
                                             Review Proposals
+                                        </button>
+                                    )}
+
+                                    {confirmDelete === challenge._id ? (
+                                        <div className="flex gap-2 ml-auto">
+                                            <button
+                                                onClick={() => handleDelete(challenge._id)}
+                                                disabled={deleting === challenge._id}
+                                                className="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-500 disabled:opacity-50 flex items-center gap-2"
+                                            >
+                                                {deleting === challenge._id ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    'Confirm'
+                                                )}
+                                            </button>
+                                            <button
+                                                onClick={() => setConfirmDelete(null)}
+                                                className="px-4 py-2 bg-neutral-700 text-neutral-300 rounded-lg text-sm hover:bg-neutral-600"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => setConfirmDelete(challenge._id)}
+                                            className="px-3 py-2 bg-neutral-800 text-red-400 rounded-lg text-sm hover:bg-red-950 ml-auto"
+                                            title="Delete challenge"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
                                         </button>
                                     )}
                                 </div>

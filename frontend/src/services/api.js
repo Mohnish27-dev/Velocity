@@ -675,6 +675,15 @@ export const fellowshipApi = {
     return handleResponse(response)
   },
 
+  async deleteChallenge(challengeId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/challenges/${challengeId}`, {
+      method: 'DELETE',
+      headers
+    })
+    return handleResponse(response)
+  },
+
   async applyToChallenge(challengeId, data) {
     const headers = await getAuthHeaders()
     const response = await fetch(`${API_BASE}/fellowship/challenges/${challengeId}/apply`, {
@@ -718,6 +727,46 @@ export const fellowshipApi = {
     const response = await fetch(`${API_BASE}/fellowship/stats`, {
       method: 'GET',
       headers
+    })
+    return handleResponse(response)
+  },
+
+  async getChatRooms() {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/chat/rooms`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async getChatRoom(roomId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/chat/rooms/${roomId}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async getChatMessages(roomId, before = null) {
+    const headers = await getAuthHeaders()
+    const url = before
+      ? `${API_BASE}/fellowship/chat/rooms/${roomId}/messages?before=${before}`
+      : `${API_BASE}/fellowship/chat/rooms/${roomId}/messages`
+    const response = await fetch(url, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  async sendChatMessage(roomId, content) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/fellowship/chat/rooms/${roomId}/messages`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ content })
     })
     return handleResponse(response)
   }

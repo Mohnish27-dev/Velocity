@@ -135,8 +135,8 @@ export default function CreateChallenge() {
                                 type="button"
                                 onClick={() => setCategory(cat.id)}
                                 className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${category === cat.id
-                                        ? 'bg-emerald-600 text-white'
-                                        : 'bg-neutral-800 text-neutral-400 hover:text-white'
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-neutral-800 text-neutral-400 hover:text-white'
                                     }`}
                             >
                                 {cat.icon} {cat.label}
@@ -176,13 +176,14 @@ export default function CreateChallenge() {
                     <div>
                         <label className="block text-sm text-neutral-400 mb-2">Deadline *</label>
                         <div className="relative">
-                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 pointer-events-none" />
                             <input
                                 type="date"
                                 value={deadline}
                                 onChange={(e) => setDeadline(e.target.value)}
                                 min={new Date().toISOString().split('T')[0]}
-                                className="w-full pl-10 pr-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white focus:outline-none focus:border-emerald-500"
+                                className="w-full pl-10 pr-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-white focus:outline-none focus:border-emerald-500 cursor-pointer [color-scheme:dark]"
+                                style={{ colorScheme: 'dark' }}
                             />
                         </div>
                     </div>
