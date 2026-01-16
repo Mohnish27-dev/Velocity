@@ -33,9 +33,9 @@ export default function InterviewPrep() {
   const [formData, setFormData] = useState({
     jobRole: '',
     industry: 'software_engineering',
-    experienceLevel: 'entry'
+    experienceLevel: 'entry',
+    questionCount: 10
   });
-
   const [interviewId, setInterviewId] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -46,8 +46,8 @@ export default function InterviewPrep() {
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [faceVisible, setFaceVisible] = useState(true);
+  const [answersSubmitted, setAnswersSubmitted] = useState([]);
 
-  const [currentFeedback, setCurrentFeedback] = useState(null);
   const [overallResults, setOverallResults] = useState(null);
   const [expressionSamples, setExpressionSamples] = useState([]);
 
@@ -72,7 +72,7 @@ export default function InterviewPrep() {
   }, [step]);
 
   useEffect(() => {
-    if (step === 'interview' && questions.length > 0 && !currentFeedback) {
+    if (step === 'interview' && questions.length > 0) {
       speakQuestion(questions[currentQuestionIndex]?.question);
     }
   }, [currentQuestionIndex, step, questions]);
@@ -213,6 +213,7 @@ export default function InterviewPrep() {
       const response = await interviewApi.startInterview(formData);
       setInterviewId(response.data.interviewId);
       setQuestions(response.data.questions);
+      setAnswersSubmitted([]);
       setStep('interview');
     } catch (err) {
       setError(err.message || 'Failed to start interview');
@@ -242,55 +243,42 @@ export default function InterviewPrep() {
       setRecordingTime(Math.floor((Date.now() - startTimeRef.current) / 1000));
     }, 1000);
 
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
+    const recognition = new (window.webkitSpeechRecognition || window.SpeechRecognition)();
+    recognition.lang = 'en-US';
+    recognition.interimResults = true;
+    recognition.continuous = true;
 
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
-      recognition.maxAlternatives = 1;
+    recognition.onresult = (event) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
 
-      recognition.onresult = (event) => {
-        let interimTranscript = '';
-        let finalTranscript = transcriptRef.current;
-
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          const text = result[0].transcript;
-          if (result.isFinal) {
-            finalTranscript += text + ' ';
-            transcriptRef.current = finalTranscript;
-          } else {
-            interimTranscript += text;
-          }
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript + ' ';
+        } else {
+          interimTranscript += result[0].transcript;
         }
-        setTranscript(finalTranscript + interimTranscript);
-      };
-
-      recognition.onerror = (event) => {
-        if (event.error === 'no-speech' || event.error === 'aborted' || event.error === 'network') {
-          if (isRecordingRef.current) {
-            setTimeout(() => { try { recognition.start(); } catch (e) { } }, 100);
-          }
-        }
-      };
-
-      recognition.onend = () => {
-        if (isRecordingRef.current) {
-          setTimeout(() => { try { recognition.start(); } catch (e) { } }, 100);
-        }
-      };
-
-      try {
-        recognition.start();
-        recognitionRef.current = recognition;
-      } catch (e) {
-        setError('Failed to start speech recognition.');
       }
-    } else {
-      setError('Speech recognition not supported. Use Chrome or Edge.');
-    }
+
+      transcriptRef.current = finalTranscript;
+      setTranscript(finalTranscript + interimTranscript);
+    };
+
+    recognition.onerror = (event) => {
+      if (isRecordingRef.current && (event.error === 'no-speech' || event.error === 'network' || event.error === 'aborted')) {
+        setTimeout(() => { try { recognition.start(); } catch (e) { } }, 100);
+      }
+    };
+
+    recognition.onend = () => {
+      if (isRecordingRef.current) {
+        setTimeout(() => { try { recognition.start(); } catch (e) { } }, 100);
+      }
+    };
+
+    recognition.start();
+    recognitionRef.current = recognition;
   };
 
   const stopRecording = async () => {
@@ -313,24 +301,21 @@ export default function InterviewPrep() {
     setError('');
 
     try {
-      const response = await interviewApi.submitAnswer(interviewId, {
+      await interviewApi.submitAnswer(interviewId, {
         questionId: questions[currentQuestionIndex].questionId,
         transcript: finalTranscript,
         duration,
         expressionMetrics: metrics
       });
 
-      setCurrentFeedback(response.data);
+      setAnswersSubmitted([...answersSubmitted, { questionIndex: currentQuestionIndex, transcript: finalTranscript }]);
 
-      setTimeout(() => {
-        if (currentQuestionIndex < questions.length - 1) {
-          setCurrentQuestionIndex(prev => prev + 1);
-          setCurrentFeedback(null);
-          setTranscript('');
-        } else {
-          completeInterview();
-        }
-      }, 5000);
+      if (currentQuestionIndex < questions.length - 1) {
+        setCurrentQuestionIndex(prev => prev + 1);
+        setTranscript('');
+      } else {
+        completeInterview();
+      }
     } catch (err) {
       setError(err.message || 'Failed to submit answer');
     } finally {
@@ -368,9 +353,9 @@ export default function InterviewPrep() {
     setQuestions([]);
     setCurrentQuestionIndex(0);
     setOverallResults(null);
-    setCurrentFeedback(null);
     setTranscript('');
     setExpressionSamples([]);
+    setAnswersSubmitted([]);
   };
 
   if (step === 'setup') {
@@ -389,7 +374,7 @@ export default function InterviewPrep() {
               AI-Powered Interview Practice
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-3">Interview Prep</h1>
-            <p className="text-lg text-neutral-400">Practice with AI interviewer, get instant feedback on your answers</p>
+            <p className="text-lg text-neutral-400">Practice with AI interviewer, get complete feedback at the end</p>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
@@ -429,6 +414,22 @@ export default function InterviewPrep() {
                   </select>
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-neutral-400 mb-2">Number of Questions</label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="range"
+                      min="2"
+                      max="20"
+                      value={formData.questionCount}
+                      onChange={(e) => setFormData({ ...formData, questionCount: parseInt(e.target.value) })}
+                      className="flex-1 h-2 bg-neutral-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                    />
+                    <span className="w-12 text-center text-lg font-semibold text-indigo-400">{formData.questionCount}</span>
+                  </div>
+                  <p className="text-xs text-neutral-500 mt-2">Choose between 2 to 20 questions for your interview</p>
+                </div>
+
                 {error && (
                   <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
@@ -438,13 +439,13 @@ export default function InterviewPrep() {
 
                 <Button type="submit" disabled={loading} variant="primary" className="w-full !py-4 !text-lg !rounded-xl flex items-center justify-center gap-2">
                   {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mic className="w-5 h-5" />}
-                  {loading ? 'Generating Questions...' : 'Start Interview (10 Questions)'}
+                  {loading ? 'Generating Questions...' : `Start Interview (${formData.questionCount} Questions)`}
                 </Button>
               </form>
 
               <div className="mt-6 pt-6 border-t border-neutral-800">
                 <p className="text-xs text-neutral-500 text-center">
-                  Questions will be read aloud • Your answers are analyzed in real-time • Get instant feedback
+                  Questions will be read aloud • Your answers are recorded • Complete feedback at the end
                 </p>
               </div>
             </div>
@@ -554,31 +555,6 @@ export default function InterviewPrep() {
                 )}
               </div>
 
-              {currentFeedback && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-6 rounded-2xl bg-emerald-950/50 border border-emerald-800/50">
-                  <div className="flex items-start gap-3 mb-4">
-                    <CheckCircle className="w-6 h-6 text-emerald-400 flex-shrink-0" />
-                    <div>
-                      <h4 className="text-lg font-semibold text-white">Instant Feedback</h4>
-                      <p className="text-emerald-200 text-sm mt-1">{currentFeedback.analysis?.feedback}</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 mt-4">
-                    {[
-                      { label: 'Relevance', value: currentFeedback.analysis?.relevance || 0 },
-                      { label: 'Clarity', value: currentFeedback.analysis?.clarity || 0 },
-                      { label: 'Confidence', value: currentFeedback.analysis?.confidence || 0 },
-                      { label: 'Filler Words', value: currentFeedback.analysis?.fillerWords?.count || 0, isCount: true }
-                    ].map((item, idx) => (
-                      <div key={idx} className="p-3 bg-emerald-950/50 border border-emerald-800/30 rounded-xl">
-                        <p className="text-xs text-emerald-400">{item.label}</p>
-                        <p className="text-2xl font-bold text-white">{item.value}{!item.isCount && '%'}</p>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
               {error && (
                 <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 flex items-start gap-3">
                   <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
@@ -588,16 +564,22 @@ export default function InterviewPrep() {
 
               <div className="flex gap-3">
                 {!isRecording ? (
-                  <Button onClick={startRecording} disabled={loading || currentFeedback || isSpeaking} variant="primary" className="flex-1 !py-4 !rounded-xl flex items-center justify-center gap-2">
+                  <Button onClick={startRecording} disabled={loading || isSpeaking} variant="primary" className="flex-1 !py-4 !rounded-xl flex items-center justify-center gap-2">
                     <Mic className="w-5 h-5" />
                     {isSpeaking ? 'Wait for question...' : 'Start Recording'}
                   </Button>
                 ) : (
                   <button onClick={stopRecording} disabled={loading} className="flex-1 py-4 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50">
                     <XCircle className="w-5 h-5" />
-                    Stop & Submit
+                    {loading ? 'Submitting...' : 'Stop & Next'}
                   </button>
                 )}
+              </div>
+
+              <div className="p-4 rounded-xl bg-neutral-800/30 border border-neutral-800">
+                <p className="text-xs text-neutral-500 text-center">
+                  Complete all questions to see your feedback • No scores shown during interview
+                </p>
               </div>
             </motion.div>
           </div>
@@ -621,7 +603,7 @@ export default function InterviewPrep() {
               <CheckCircle className="w-12 h-12 text-white" />
             </div>
             <h1 className="text-4xl font-bold text-white mb-2">Interview Complete!</h1>
-            <p className="text-neutral-400">Here's your performance analysis</p>
+            <p className="text-neutral-400">Here's your complete performance analysis</p>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="p-8 rounded-2xl bg-neutral-900/50 border border-neutral-800 mb-6">
@@ -633,17 +615,22 @@ export default function InterviewPrep() {
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {[
-                { label: 'Answered', value: `${overallResults.answeredQuestions}/${overallResults.totalQuestions}`, color: 'indigo' },
-                { label: 'Duration', value: formatTime(overallResults.duration), color: 'sky' },
-                { label: 'Expression', value: `${overallResults.overallFeedback?.expressionAnalysis?.overallConfidence || 0}%`, color: 'emerald' },
-                { label: 'Status', value: 'Done', color: 'purple' }
-              ].map((stat, idx) => (
-                <div key={idx} className={`text-center p-4 rounded-xl bg-${stat.color}-500/10 border border-${stat.color}-500/20`}>
-                  <p className="text-sm text-neutral-400">{stat.label}</p>
-                  <p className={`text-2xl font-bold text-${stat.color}-400`}>{stat.value}</p>
-                </div>
-              ))}
+              <div className="text-center p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+                <p className="text-sm text-neutral-400">Answered</p>
+                <p className="text-2xl font-bold text-indigo-400">{overallResults.answeredQuestions}/{overallResults.totalQuestions}</p>
+              </div>
+              <div className="text-center p-4 rounded-xl bg-sky-500/10 border border-sky-500/20">
+                <p className="text-sm text-neutral-400">Duration</p>
+                <p className="text-2xl font-bold text-sky-400">{formatTime(overallResults.duration)}</p>
+              </div>
+              <div className="text-center p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                <p className="text-sm text-neutral-400">Expression</p>
+                <p className="text-2xl font-bold text-emerald-400">{overallResults.overallFeedback?.expressionAnalysis?.overallConfidence || 0}%</p>
+              </div>
+              <div className="text-center p-4 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <p className="text-sm text-neutral-400">Status</p>
+                <p className="text-2xl font-bold text-purple-400">Complete</p>
+              </div>
             </div>
 
             {overallResults.overallFeedback && (

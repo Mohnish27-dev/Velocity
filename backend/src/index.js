@@ -5,10 +5,8 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 
-// Load environment variables
 dotenv.config();
 
-// Import routes
 import uploadRoutes from './routes/upload.js';
 import resumeRoutes from './routes/resume.js';
 import enhanceRoutes from './routes/enhance.js';
@@ -21,16 +19,12 @@ import adminRoutes from './routes/admin.js';
 import fellowshipRoutes from './routes/fellowships.js';
 import interviewRoutes from './routes/interview.js';
 
-// Import middleware
 import { errorHandler } from './middleware/errorHandler.js';
 
-// Import Socket.IO
 import { initializeSocket } from './config/socket.js';
 
-// Import community initializer (Firebase)
 import { initializeDefaultChannels } from './controllers/communityFirebaseController.js';
 
-// Import services
 import mongoose from 'mongoose';
 import { initJobFetcher } from './services/jobFetcher.js';
 import JobAlert from './models/JobAlert.model.js';
@@ -39,10 +33,8 @@ const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
-// Security middleware
 app.use(helmet());
 
-// CORS configuration
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
@@ -50,7 +42,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Rate limiting
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 500, // increased for development
@@ -62,11 +53,9 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
@@ -75,7 +64,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/resumes', resumeRoutes);
@@ -88,35 +76,28 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/fellowship', fellowshipRoutes);
 app.use('/api/interview', interviewRoutes);
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
-
-// Global error handler
 app.use(errorHandler);
-
-// Connect to MongoDB and start server
 const startServer = async () => {
   try {
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/velocity';
+
+    console.log('📦 Connecting to MongoDB...');
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10
+    });
+    console.log('📦 Connected to MongoDB');
+
     httpServer.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🔗 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:5173'}`);
     });
-    // Connect to MongoDB
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/velocity';
-    mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 5000 })
-      .then(() => console.log('📦 Connected to MongoDB'))
-      .catch(err =>
-        console.error('❌ MongoDB connection failed:', err.message)
-      );
 
-    // await mongoose.connect(mongoUri);
-    // console.log('📦 Connected to MongoDB');
-
-    // Start server with HTTP server (for Socket.IO)
-    // Initialize default community channels
     try {
       await initializeDefaultChannels();
       console.log('💬 Community channels initialized');
@@ -124,7 +105,6 @@ const startServer = async () => {
       console.warn('⚠️ Could not initialize default channels:', channelError.message);
     }
 
-    // Fix dev alerts - update fake emails to test email (for development testing)
     if (process.env.NODE_ENV === 'development') {
       try {
         const testEmail = process.env.DEV_USER_EMAIL || process.env.EMAIL_USER;
@@ -142,12 +122,8 @@ const startServer = async () => {
       }
     }
 
-    // Initialize Socket.IO
     initializeSocket(httpServer);
 
-
-    // Initialize job fetcher after server starts
-    // Works with or without Redis (degrades gracefully)
     try {
       await initJobFetcher();
     } catch (fetcherError) {
@@ -155,7 +131,7 @@ const startServer = async () => {
     }
 
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('❌ Failed to start server:', error.message);
     process.exit(1);
   }
 };

@@ -7,13 +7,14 @@ import { generateInterviewQuestions, analyzeAnswer, generateOverallFeedback } fr
 const router = express.Router();
 
 router.post('/start', verifyToken, asyncHandler(async (req, res) => {
-    const { jobRole, industry, experienceLevel } = req.body;
+    const { jobRole, industry, experienceLevel, questionCount } = req.body;
 
     if (!jobRole || !industry || !experienceLevel) {
         throw new ApiError(400, 'Job role, industry, and experience level are required');
     }
 
-    const questions = await generateInterviewQuestions({ jobRole, industry, experienceLevel });
+    const count = Math.min(Math.max(parseInt(questionCount) || 10, 2), 20);
+    const questions = await generateInterviewQuestions({ jobRole, industry, experienceLevel, questionCount: count });
 
     const interview = new Interview({
         odId: req.user.uid,

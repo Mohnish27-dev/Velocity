@@ -1,21 +1,29 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import Groq from 'groq-sdk';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const generateQuestionId = () => `q_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+const callGroq = async (prompt) => {
+  const completion = await groq.chat.completions.create({
+    messages: [{ role: 'user', content: prompt }],
+    model: 'llama-3.3-70b-versatile',
+    temperature: 0.7,
+    max_tokens: 4096,
+    response_format: { type: 'json_object' }
+  });
+  return completion.choices[0]?.message?.content || '{}';
+};
+
 export const generateInterviewQuestions = async (preferences) => {
-    const { jobRole, industry, experienceLevel } = preferences;
+  const { jobRole, industry, experienceLevel, questionCount = 10 } = preferences;
 
-    const prompt = `You are an expert interview coach. Generate exactly 10 interview questions for a ${experienceLevel} ${jobRole} position in the ${industry} industry.
+  const prompt = `You are an expert interview coach. Generate exactly ${questionCount} interview questions for a ${experienceLevel} ${jobRole} position in the ${industry} industry.
 
-IMPORTANT: Return ONLY valid JSON, no markdown.
-
-Return this exact structure:
+Return ONLY valid JSON with this exact structure:
 {
   "questions": [
     {
@@ -27,37 +35,33 @@ Return this exact structure:
 }
 
 Rules:
-1. Mix question types: 3 behavioral, 3 technical, 2 situational, 2 general
+1. Mix question types appropriately (behavioral, technical, situational, general)
 2. Progress from easy to hard
 3. Make questions specific to ${jobRole} role
 4. Include industry-specific scenarios for ${industry}
-5. Adjust complexity for ${experienceLevel} level`;
+5. Adjust complexity for ${experienceLevel} level
+6. Generate exactly ${questionCount} questions`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+  const text = await callGroq(prompt);
+  const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const parsed = JSON.parse(cleanedText);
 
-    const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const parsed = JSON.parse(cleanedText);
-
-    return parsed.questions.slice(0, 10).map(q => ({
-        questionId: generateQuestionId(),
-        question: q.question,
-        type: q.type,
-        difficulty: q.difficulty
-    }));
+  return parsed.questions.slice(0, questionCount).map(q => ({
+    questionId: generateQuestionId(),
+    question: q.question,
+    type: q.type,
+    difficulty: q.difficulty
+  }));
 };
 
 export const analyzeAnswer = async (question, transcript, duration) => {
-    const prompt = `You are an expert interview coach analyzing a candidate's response.
+  const prompt = `You are an expert interview coach analyzing a candidate's response.
 
 Question: "${question}"
 Candidate's Answer: "${transcript}"
 Duration: ${duration} seconds
 
-IMPORTANT: Return ONLY valid JSON.
-
-Analyze and return:
+Return ONLY valid JSON with this structure:
 {
   "relevance": <0-100 how relevant the answer is to the question>,
   "clarity": <0-100 how clear and well-structured>,
@@ -77,32 +81,29 @@ Rules:
 3. Score fairly based on content quality
 4. Detect filler words like "um", "uh", "like", "you know", "basically"`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-
-    const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    return JSON.parse(cleanedText);
+  const text = await callGroq(prompt);
+  const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  return JSON.parse(cleanedText);
 };
 
 export const generateOverallFeedback = async (interview) => {
-    const answeredQuestions = interview.answers.length;
-    const totalQuestions = interview.questions.length;
+  const answeredQuestions = interview.answers.length;
+  const totalQuestions = interview.questions.length;
 
-    const answersData = interview.answers.map((a, i) => ({
-        question: a.question,
-        relevance: a.analysis?.relevance || 0,
-        clarity: a.analysis?.clarity || 0,
-        confidence: a.analysis?.confidence || 0,
-        expressionConfidence: a.expressionMetrics?.overallExpressionScore || 0
-    }));
+  const answersData = interview.answers.map((a) => ({
+    question: a.question,
+    relevance: a.analysis?.relevance || 0,
+    clarity: a.analysis?.clarity || 0,
+    confidence: a.analysis?.confidence || 0,
+    expressionConfidence: a.expressionMetrics?.overallExpressionScore || 0
+  }));
 
-    const avgRelevance = answersData.reduce((sum, a) => sum + a.relevance, 0) / answersData.length || 0;
-    const avgClarity = answersData.reduce((sum, a) => sum + a.clarity, 0) / answersData.length || 0;
-    const avgConfidence = answersData.reduce((sum, a) => sum + a.confidence, 0) / answersData.length || 0;
-    const avgExpression = answersData.reduce((sum, a) => sum + a.expressionConfidence, 0) / answersData.length || 0;
+  const avgRelevance = answersData.reduce((sum, a) => sum + a.relevance, 0) / answersData.length || 0;
+  const avgClarity = answersData.reduce((sum, a) => sum + a.clarity, 0) / answersData.length || 0;
+  const avgConfidence = answersData.reduce((sum, a) => sum + a.confidence, 0) / answersData.length || 0;
+  const avgExpression = answersData.reduce((sum, a) => sum + a.expressionConfidence, 0) / answersData.length || 0;
 
-    const prompt = `You are a senior interview coach providing overall feedback.
+  const prompt = `You are a senior interview coach providing overall feedback.
 
 Interview Performance Data:
 - Questions Answered: ${answeredQuestions}/${totalQuestions}
@@ -113,9 +114,7 @@ Interview Performance Data:
 - Job Role: ${interview.jobRole}
 - Experience Level: ${interview.experienceLevel}
 
-IMPORTANT: Return ONLY valid JSON.
-
-Return:
+Return ONLY valid JSON with this structure:
 {
   "summary": "<3-4 sentence overall assessment>",
   "topStrengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
@@ -127,17 +126,14 @@ Return:
   }
 }`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+  const text = await callGroq(prompt);
+  const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+  const feedback = JSON.parse(cleanedText);
 
-    const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-    const feedback = JSON.parse(cleanedText);
+  const overallScore = Math.round((avgRelevance * 0.35) + (avgClarity * 0.25) + (avgConfidence * 0.2) + (avgExpression * 0.2));
 
-    const overallScore = Math.round((avgRelevance * 0.35) + (avgClarity * 0.25) + (avgConfidence * 0.2) + (avgExpression * 0.2));
-
-    return {
-        overallScore,
-        overallFeedback: feedback
-    };
+  return {
+    overallScore,
+    overallFeedback: feedback
+  };
 };
