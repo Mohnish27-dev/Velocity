@@ -100,7 +100,7 @@ function App() {
             }}
           />
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<PublicRoute><Home /></PublicRoute>} />
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
 
@@ -128,7 +128,6 @@ function App() {
               <Route path="messages/:roomId" element={<FellowshipChat />} />
             </Route>
 
-            {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

@@ -474,7 +474,7 @@ export default function InterviewPrep() {
           <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
         </div>
 
-        <div className="relative max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+        <div className="relative max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm mb-4">
               <Sparkles className="w-4 h-4" />
@@ -572,7 +572,7 @@ export default function InterviewPrep() {
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-500/5 rounded-full blur-3xl" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium text-neutral-400">Question {currentQuestionIndex + 1} of {questions.length}</span>
@@ -728,7 +728,7 @@ export default function InterviewPrep() {
           <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-purple-500/8 rounded-full blur-3xl" />
         </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-12">
             <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ delay: 0.2, type: 'spring' }} className="relative inline-block mb-6">
               <div className={`w-24 h-24 bg-gradient-to-br from-${scoreColor}-500 to-${scoreColor}-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-${scoreColor}-500/30`}>

@@ -75,7 +75,7 @@ export default function JobAlerts() {
             </div>
 
             {/* Hero Section */}
-            <div className="relative pt-24 pb-8">
+            <div className="relative pt-8 pb-8">
                 <div className="max-w-6xl mx-auto px-4">
                     <div className="flex items-center justify-between mb-8">
                         <div>

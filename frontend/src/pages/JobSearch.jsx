@@ -156,7 +156,7 @@ export default function JobSearch() {
         <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -213,8 +213,8 @@ export default function JobSearch() {
                   type="button"
                   onClick={() => setShowFilters(!showFilters)}
                   className={`px-4 py-4 rounded-xl border transition-all cursor-pointer ${showFilters
-                      ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400'
-                      : 'bg-neutral-800/50 border-neutral-700 text-neutral-400 hover:bg-neutral-800'
+                    ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400'
+                    : 'bg-neutral-800/50 border-neutral-700 text-neutral-400 hover:bg-neutral-800'
                     }`}
                 >
                   <Filter className="w-5 h-5" />
@@ -430,8 +430,8 @@ export default function JobSearch() {
                         <button
                           onClick={() => handleSaveJob(job)}
                           className={`p-2 rounded-lg transition-colors cursor-pointer ${savedJobs.has(job.job_id || job.id)
-                              ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
-                              : 'bg-neutral-800 text-neutral-500 hover:bg-indigo-500/20 hover:text-indigo-400 border border-neutral-700'
+                            ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                            : 'bg-neutral-800 text-neutral-500 hover:bg-indigo-500/20 hover:text-indigo-400 border border-neutral-700'
                             }`}
                           title={savedJobs.has(job.job_id || job.id) ? 'Saved' : 'Save to tracker'}
                         >

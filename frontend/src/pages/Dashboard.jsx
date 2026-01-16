@@ -18,7 +18,9 @@ import {
   Clock,
   Users,
   Sparkles,
-  GraduationCap
+  GraduationCap,
+  Bell,
+  Mic
 } from 'lucide-react'
 import { resumeApi, jobTrackerApi } from '../services/api'
 import Button from '../components/Button'
@@ -99,17 +101,14 @@ export default function Dashboard() {
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-slate-500/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-zinc-400 text-sm">Command Center Active</span>
-          </div>
+
           <h1 className="text-4xl font-bold text-white mb-2">
             Welcome back
           </h1>
@@ -125,71 +124,76 @@ export default function Dashboard() {
           </div>
         ) : (
           <motion.div variants={containerVariants} initial="hidden" animate="visible">
-            {/* Quick Actions - Clean minimal cards */}
-            <motion.div variants={itemVariants} className="grid md:grid-cols-4 gap-4 mb-8">
+            {/* Quick Actions - All Features */}
+            <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-8">
               <Link to="/jobs" className="group">
-                <div className="relative p-6 rounded-2xl bg-zinc-900/80 border border-zinc-800 overflow-hidden transition-all duration-300 hover:border-zinc-700 hover:bg-zinc-900">
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-sky-500/10 border border-sky-500/20 rounded-xl flex items-center justify-center mb-4">
-                      <Search className="w-6 h-6 text-sky-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-white mb-1">Find Jobs</h3>
-                    <p className="text-zinc-500 text-sm">Search opportunities</p>
+                <div className="relative p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 overflow-hidden transition-all duration-300 hover:border-sky-500/30 hover:bg-zinc-900">
+                  <div className="w-10 h-10 bg-sky-500/10 border border-sky-500/20 rounded-lg flex items-center justify-center mb-3">
+                    <Search className="w-5 h-5 text-sky-400" />
                   </div>
-                  <ArrowRight className="absolute bottom-6 right-6 w-5 h-5 text-zinc-600 group-hover:translate-x-1 group-hover:text-zinc-400 transition-all" />
+                  <h3 className="text-sm font-semibold text-white mb-0.5">Find Jobs</h3>
+                  <p className="text-zinc-500 text-xs">Search opportunities</p>
                 </div>
               </Link>
 
-              <Link to="/job-tracker" className="group">
-                <div className="relative p-6 rounded-2xl bg-zinc-900/80 border border-zinc-800 overflow-hidden transition-all duration-300 hover:border-zinc-700 hover:bg-zinc-900">
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center mb-4">
-                      <Briefcase className="w-6 h-6 text-emerald-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-white mb-1">Job Tracker</h3>
-                    <p className="text-zinc-500 text-sm">{jobStats.total} tracked</p>
+              <Link to="/job-alerts" className="group">
+                <div className="relative p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 overflow-hidden transition-all duration-300 hover:border-purple-500/30 hover:bg-zinc-900">
+                  <div className="w-10 h-10 bg-purple-500/10 border border-purple-500/20 rounded-lg flex items-center justify-center mb-3">
+                    <Bell className="w-5 h-5 text-purple-400" />
                   </div>
-                  <ArrowRight className="absolute bottom-6 right-6 w-5 h-5 text-zinc-600 group-hover:translate-x-1 group-hover:text-zinc-400 transition-all" />
+                  <h3 className="text-sm font-semibold text-white mb-0.5">Job Alerts</h3>
+                  <p className="text-zinc-500 text-xs">Get notified</p>
+                </div>
+              </Link>
+
+              <Link to="/interview-prep" className="group">
+                <div className="relative p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 overflow-hidden transition-all duration-300 hover:border-indigo-500/30 hover:bg-zinc-900">
+                  <div className="w-10 h-10 bg-indigo-500/10 border border-indigo-500/20 rounded-lg flex items-center justify-center mb-3">
+                    <Mic className="w-5 h-5 text-indigo-400" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-white mb-0.5">Interview</h3>
+                  <p className="text-zinc-500 text-xs">AI practice</p>
                 </div>
               </Link>
 
               <Link to="/upload" className="group">
-                <div className="relative p-6 rounded-2xl bg-zinc-900/80 border border-zinc-800 overflow-hidden transition-all duration-300 hover:border-zinc-700 hover:bg-zinc-900">
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center justify-center mb-4">
-                      <Sparkles className="w-6 h-6 text-amber-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-white mb-1">AI Enhance</h3>
-                    <p className="text-zinc-500 text-sm">Optimize resume</p>
+                <div className="relative p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 overflow-hidden transition-all duration-300 hover:border-amber-500/30 hover:bg-zinc-900">
+                  <div className="w-10 h-10 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-center justify-center mb-3">
+                    <Sparkles className="w-5 h-5 text-amber-400" />
                   </div>
-                  <ArrowRight className="absolute bottom-6 right-6 w-5 h-5 text-zinc-600 group-hover:translate-x-1 group-hover:text-zinc-400 transition-all" />
+                  <h3 className="text-sm font-semibold text-white mb-0.5">AI Enhance</h3>
+                  <p className="text-zinc-500 text-xs">Optimize resume</p>
+                </div>
+              </Link>
+
+              <Link to="/job-tracker" className="group">
+                <div className="relative p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 overflow-hidden transition-all duration-300 hover:border-emerald-500/30 hover:bg-zinc-900">
+                  <div className="w-10 h-10 bg-emerald-500/10 border border-emerald-500/20 rounded-lg flex items-center justify-center mb-3">
+                    <Briefcase className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <h3 className="text-sm font-semibold text-white mb-0.5">Tracker</h3>
+                  <p className="text-zinc-500 text-xs">{jobStats.total} tracked</p>
                 </div>
               </Link>
 
               <Link to="/community" className="group">
-                <div className="relative p-6 rounded-2xl bg-zinc-900/80 border border-zinc-800 overflow-hidden transition-all duration-300 hover:border-zinc-700 hover:bg-zinc-900">
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-sky-500/10 border border-sky-500/20 rounded-xl flex items-center justify-center mb-4">
-                      <Users className="w-6 h-6 text-sky-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-white mb-1">Community</h3>
-                    <p className="text-zinc-500 text-sm">Connect & share</p>
+                <div className="relative p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 overflow-hidden transition-all duration-300 hover:border-cyan-500/30 hover:bg-zinc-900">
+                  <div className="w-10 h-10 bg-cyan-500/10 border border-cyan-500/20 rounded-lg flex items-center justify-center mb-3">
+                    <Users className="w-5 h-5 text-cyan-400" />
                   </div>
-                  <ArrowRight className="absolute bottom-6 right-6 w-5 h-5 text-zinc-600 group-hover:translate-x-1 group-hover:text-zinc-400 transition-all" />
+                  <h3 className="text-sm font-semibold text-white mb-0.5">Community</h3>
+                  <p className="text-zinc-500 text-xs">Connect & share</p>
                 </div>
               </Link>
 
               <Link to="/fellowship" className="group">
-                <div className="relative p-6 rounded-2xl bg-gradient-to-br from-emerald-950/50 to-zinc-900 border border-emerald-900/50 overflow-hidden transition-all duration-300 hover:border-emerald-700/50 hover:shadow-lg hover:shadow-emerald-900/20">
-                  <div className="absolute top-2 right-2 px-2 py-0.5 bg-emerald-500/20 rounded text-[10px] text-emerald-400 font-medium">NEW</div>
-                  <div className="relative">
-                    <div className="w-12 h-12 bg-emerald-500/20 border border-emerald-500/30 rounded-xl flex items-center justify-center mb-4">
-                      <GraduationCap className="w-6 h-6 text-emerald-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-white mb-1">Fellowships</h3>
-                    <p className="text-zinc-500 text-sm">Earn while learning</p>
+                <div className="relative p-4 rounded-xl bg-gradient-to-br from-emerald-950/50 to-zinc-900 border border-emerald-900/50 overflow-hidden transition-all duration-300 hover:border-emerald-500/30">
+                 
+                  <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/30 rounded-lg flex items-center justify-center mb-3">
+                    <GraduationCap className="w-5 h-5 text-emerald-400" />
                   </div>
-                  <ArrowRight className="absolute bottom-6 right-6 w-5 h-5 text-emerald-600 group-hover:translate-x-1 group-hover:text-emerald-400 transition-all" />
+                  <h3 className="text-sm font-semibold text-white mb-0.5">Fellowship</h3>
+                  <p className="text-zinc-500 text-xs">Earn & learn</p>
                 </div>
               </Link>
             </motion.div>
