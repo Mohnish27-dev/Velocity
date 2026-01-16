@@ -121,7 +121,8 @@ router.post('/:id/complete', verifyToken, asyncHandler(async (req, res) => {
             overallFeedback,
             answeredQuestions: interview.answers.length,
             totalQuestions: interview.questions.length,
-            duration: interview.duration
+            duration: interview.duration,
+            answers: interview.answers
         }
     });
 }));
