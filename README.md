@@ -1,4 +1,4 @@
-# 🚀 AI Resume Builder & Career Platform
+# 🚀 Velocity - AI Career Platform
 
 <div align="center">
 
@@ -7,8 +7,9 @@
 ![React](https://img.shields.io/badge/React-19-blue.svg)
 ![Firebase](https://img.shields.io/badge/Firebase-Firestore-orange.svg)
 ![AI](https://img.shields.io/badge/AI-Gemini%202.5-purple.svg)
+![Razorpay](https://img.shields.io/badge/Payments-Razorpay-blue.svg)
 
-**An intelligent, AI-powered career platform that revolutionizes the job hunting experience through automated resume enhancement, intelligent job matching, and community-driven networking.**
+**An intelligent, AI-powered career platform that revolutionizes the job hunting experience through automated resume enhancement, intelligent job matching, AI mock interviews, corporate fellowships, and community-driven networking.**
 
 [Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [API Reference](./API_DOCS/README.md) • [Architecture](./ARCHITECTURE.md) • [Contributing](./CONTRIBUTION.md)
 
@@ -117,6 +118,30 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 - **Presence Indicators**: See who's online in real-time
 - **Member Discovery**: Find and connect with fellow job seekers
 
+### 🎓 Velocity Fellowships
+- **Corporate Challenges**: Companies post real-world challenges for students
+- **Student Proposals**: Students submit proposals with cover letters and pricing
+- **Proposal Review**: Companies review, accept, or reject proposals
+- **Escrow Payments**: Razorpay integration for secure payments
+- **Real-time Chat**: Direct messaging between corporate and students
+- **Challenge Completion**: Fund release upon satisfactory completion
+- **Student Verification**: Academic email verification system
+
+### 🎤 AI Interview Prep
+- **Mock Interviews**: AI-powered interview simulations
+- **Role-Specific Questions**: Tailored questions based on target role
+- **Real-time Feedback**: Instant AI evaluation of responses
+- **Performance Scoring**: Detailed scoring with improvement suggestions
+- **Interview History**: Track progress across multiple sessions
+- **Multi-Round Support**: Technical, behavioral, and HR round simulations
+
+### 💳 Payments (Razorpay)
+- **Secure Payments**: PCI-DSS compliant payment processing
+- **Multiple Payment Methods**: UPI, Cards, NetBanking, Wallets, QR Code
+- **Escrow System**: Funds held securely until work completion
+- **Fund Release**: One-click release when satisfied with deliverables
+- **Payment History**: Complete transaction tracking
+
 ### 🔐 Authentication & Security
 - **Firebase Authentication**: Secure email/password and Google OAuth
 - **JWT Token Verification**: Protected API endpoints
@@ -150,7 +175,8 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 | **Firebase Admin SDK** | Server-side Firebase services |
 | **MongoDB + Mongoose** | Database & ODM |
 | **BullMQ + IORedis** | Job queue for background tasks |
-| **Google Gemini AI** | AI/ML for resume enhancement |
+| **Google Gemini AI** | AI/ML for resume enhancement & interviews |
+| **Razorpay** | Payment processing & escrow |
 | **Nodemailer** | Email notifications |
 | **PDFKit** | PDF generation |
 | **Node-Cron** | Scheduled tasks |
@@ -215,6 +241,10 @@ SMTP_PASS=your-app-password
 # Rate Limiting
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
+
+# Razorpay (Payment Gateway)
+RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxxx
+RAZORPAY_KEY_SECRET=your-razorpay-secret
 ```
 
 #### Frontend (.env)
@@ -308,18 +338,23 @@ GdocNitp/
 │       │   ├── auth.js              # Authentication
 │       │   ├── community.js         # Community features
 │       │   ├── enhance.js           # AI enhancement
+│       │   ├── fellowships.js       # Fellowship challenges & proposals
+│       │   ├── interview.js         # AI mock interviews
 │       │   ├── jobAlerts.js         # Job alerts CRUD
 │       │   ├── jobsRoute.js         # Job search
 │       │   ├── jobTracker.js        # Application tracking
+│       │   ├── payments.js          # Razorpay payments & escrow
 │       │   ├── resume.js            # Resume management
 │       │   └── upload.js            # File uploads
 │       ├── services/
 │       │   ├── firebaseDataService.js    # Firebase operations
+│       │   ├── interviewService.js       # AI interview logic
 │       │   ├── jobAlertQueue.js          # BullMQ queue
 │       │   ├── jobAlertSocket.js         # Real-time notifications
 │       │   ├── jobFetcher.js             # Automated job fetching
 │       │   ├── mailService.js            # Email sending
 │       │   ├── notificationServices.js   # Push notifications
+│       │   ├── paymentService.js         # Razorpay integration
 │       │   ├── presenceService.js        # User presence
 │       │   ├── rapidApiService.js        # Job API integration
 │       │   └── socketServiceFirebase.js  # Socket handlers
@@ -376,13 +411,26 @@ GdocNitp/
 │       │   ├── Dashboard.jsx        # Main dashboard
 │       │   ├── Enhance.jsx          # Resume enhancement
 │       │   ├── Home.jsx             # Landing page
+│       │   ├── InterviewPrep.jsx    # AI mock interviews
 │       │   ├── JobAlerts.jsx        # Alerts management
 │       │   ├── JobSearch.jsx        # Job search page
 │       │   ├── JobTracker.jsx       # Application tracker
 │       │   ├── Login.jsx            # Login page
 │       │   ├── Register.jsx         # Registration page
 │       │   ├── ResumeView.jsx       # Resume display
-│       │   └── Upload.jsx           # Resume upload
+│       │   ├── Upload.jsx           # Resume upload
+│       │   └── fellowship/          # Fellowship feature
+│       │       ├── ChallengeDetail.jsx
+│       │       ├── ChallengeProposals.jsx
+│       │       ├── Challenges.jsx
+│       │       ├── CreateChallenge.jsx
+│       │       ├── FellowshipChat.jsx
+│       │       ├── FellowshipLayout.jsx
+│       │       ├── FellowshipMessages.jsx
+│       │       ├── MyChallenges.jsx
+│       │       ├── MyProposals.jsx
+│       │       ├── Onboarding.jsx
+│       │       └── Verify.jsx
 │       └── services/
 │           ├── api.js               # API service layer
 │           └── socket.js            # Socket client
@@ -464,6 +512,44 @@ GdocNitp/
 | `GET` | `/api/community/conversations` | Get DM conversations |
 | `GET` | `/api/community/online-users` | Get online users |
 
+### Fellowships
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/fellowship/profile` | Get fellowship profile |
+| `POST` | `/api/fellowship/profile` | Create/update profile |
+| `POST` | `/api/fellowship/verify/send-email` | Send verification email |
+| `POST` | `/api/fellowship/verify/confirm` | Confirm verification code |
+| `GET` | `/api/fellowship/challenges` | Get all challenges |
+| `POST` | `/api/fellowship/challenges` | Create challenge (Corporate) |
+| `GET` | `/api/fellowship/challenges/:id` | Get challenge details |
+| `DELETE` | `/api/fellowship/challenges/:id` | Delete challenge |
+| `POST` | `/api/fellowship/challenges/:id/apply` | Apply to challenge (Student) |
+| `GET` | `/api/fellowship/challenges/:id/proposals` | Get proposals for challenge |
+| `PUT` | `/api/fellowship/proposals/:id/status` | Accept/reject proposal |
+| `GET` | `/api/fellowship/my-challenges` | Get my challenges (Corporate) |
+| `GET` | `/api/fellowship/my-proposals` | Get my proposals (Student) |
+| `GET` | `/api/fellowship/chat/rooms` | Get chat rooms |
+| `GET` | `/api/fellowship/chat/rooms/:roomId` | Get chat room details |
+| `GET` | `/api/fellowship/chat/rooms/:roomId/messages` | Get messages |
+| `POST` | `/api/fellowship/chat/rooms/:roomId/messages` | Send message |
+
+### Interview Prep
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/interview/start` | Start mock interview |
+| `POST` | `/api/interview/:id/answer` | Submit answer |
+| `POST` | `/api/interview/:id/complete` | Complete interview |
+| `GET` | `/api/interview/:id` | Get interview details |
+| `GET` | `/api/interview/history` | Get interview history |
+
+### Payments
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/payments/create-order` | Create Razorpay order |
+| `POST` | `/api/payments/verify-payment` | Verify payment & accept proposal |
+| `POST` | `/api/payments/release-funds/:roomId` | Release escrow funds |
+| `GET` | `/api/payments/status/:roomId` | Get payment status |
+
 ### Admin
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -502,6 +588,25 @@ GdocNitp/
 3. **Message Flow**: Messages broadcast to channel members
 4. **Presence**: Online/offline status tracked
 5. **DMs**: Private conversations via personal rooms
+
+### Fellowship Payment Flow
+
+1. **Challenge Creation**: Corporate creates challenge with requirements and price
+2. **Student Application**: Students submit proposals with cover letter and pricing
+3. **Proposal Review**: Corporate reviews and selects proposal
+4. **Payment**: On acceptance, Razorpay checkout opens for escrow payment
+5. **Chat Room**: After payment, chat room created with "In Escrow" status
+6. **Collaboration**: Student and corporate discuss and work on challenge
+7. **Completion**: Corporate releases funds when satisfied
+8. **Challenge Closed**: Challenge marked complete, chat archived
+
+### AI Interview Pipeline
+
+1. **Configuration**: User selects role, difficulty, and interview type
+2. **Question Generation**: Gemini AI generates role-specific questions
+3. **Response Capture**: User answers questions in real-time
+4. **AI Evaluation**: Each answer scored with detailed feedback
+5. **Final Report**: Comprehensive performance analysis and suggestions
 
 ---
 
