@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mic, MicOff, Video, VideoOff, XCircle, CheckCircle, AlertCircle, Volume2, VolumeX, RotateCcw, UserX, Loader2, Sparkles, ArrowRight, Target, TrendingUp, MessageSquare, Eye, Brain, Award, ChevronDown, ChevronUp, Clock, BarChart3, Lightbulb, Zap, Laptop, Smartphone, Chrome, AlertTriangle } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, XCircle, CheckCircle, AlertCircle, Volume2, VolumeX, RotateCcw, UserX, Loader2, Sparkles, ArrowRight, Target, TrendingUp, MessageSquare, Eye, Brain, Award, ChevronDown, ChevronUp, Clock, BarChart3, Lightbulb, Zap, Laptop, Smartphone, Chrome, AlertTriangle, FileUp, FileText, X } from 'lucide-react';
 import Button from '../components/Button';
-import { interviewApi } from '../services/api';
+import { interviewApi, uploadApi } from '../services/api';
 
 // Device and browser detection utilities
 const isMobileDevice = () => {
@@ -53,6 +53,14 @@ function QuestionAnalysisCard({ answer, index }) {
     return 'bg-red-500/20 text-red-400 border-red-500/30';
   };
 
+  const getScoreLabel = (score) => {
+    if (score >= 90) return 'Exceptional';
+    if (score >= 80) return 'Strong';
+    if (score >= 70) return 'Good';
+    if (score >= 60) return 'Needs Work';
+    return 'Significant Gaps';
+  };
+
   return (
     <div className="rounded-2xl bg-neutral-800/30 border border-neutral-700/50 overflow-hidden transition-all duration-300 hover:border-neutral-600/50">
       <button onClick={() => setExpanded(!expanded)} className="w-full p-4 flex items-center gap-4 text-left cursor-pointer">
@@ -62,10 +70,10 @@ function QuestionAnalysisCard({ answer, index }) {
         <div className="flex-1 min-w-0">
           <p className="text-white font-medium truncate pr-4">{answer.question}</p>
           <div className="flex items-center gap-3 mt-1">
-            <span className="text-xs text-neutral-500">{answer.duration}s response</span>
-            {analysis.fillerWords?.count > 0 && (
-              <span className="text-xs text-amber-400">{analysis.fillerWords.count} filler words</span>
-            )}
+            <span className="text-xs text-neutral-500">{answer.duration}s</span>
+            <span className={`text-xs ${avgScore >= 70 ? 'text-emerald-400' : avgScore >= 50 ? 'text-amber-400' : 'text-red-400'}`}>
+              {getScoreLabel(avgScore)}
+            </span>
           </div>
         </div>
         <div className={`px-3 py-1.5 rounded-lg border text-sm font-semibold ${getScoreBadgeColor(avgScore)}`}>
@@ -79,6 +87,7 @@ function QuestionAnalysisCard({ answer, index }) {
       {expanded && (
         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="px-4 pb-4 border-t border-neutral-700/50">
           <div className="pt-4 space-y-4">
+            {/* Score Breakdown */}
             <div className="grid grid-cols-3 gap-3">
               <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20 text-center">
                 <p className="text-2xl font-bold text-sky-400">{analysis.relevance || 0}%</p>
@@ -94,20 +103,119 @@ function QuestionAnalysisCard({ answer, index }) {
               </div>
             </div>
 
-            {analysis.feedback && (
+            {/* Your Response vs Ideal Answer - Side by Side Comparison */}
+            <div className="grid lg:grid-cols-2 gap-4">
+              {/* Your Response */}
               <div className="p-4 rounded-xl bg-neutral-800/50 border border-neutral-700/50">
-                <p className="text-xs text-neutral-500 uppercase tracking-wide mb-2">AI Feedback</p>
+                <div className="flex items-center gap-2 mb-3">
+                  <MessageSquare className="w-4 h-4 text-neutral-400" />
+                  <p className="text-xs text-neutral-400 uppercase tracking-wide font-medium">Your Response</p>
+                </div>
+                <p className="text-neutral-300 text-sm leading-relaxed">"{answer.transcript}"</p>
+              </div>
+
+              {/* Ideal Answer */}
+              {analysis.idealAnswer && (
+                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Award className="w-4 h-4 text-emerald-400" />
+                    <p className="text-xs text-emerald-400 uppercase tracking-wide font-medium">Model Answer Example</p>
+                  </div>
+                  <p className="text-neutral-300 text-sm leading-relaxed">{analysis.idealAnswer}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Professional Feedback */}
+            {analysis.feedback && (
+              <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
+                <div className="flex items-center gap-2 mb-2">
+                  <Brain className="w-4 h-4 text-indigo-400" />
+                  <p className="text-xs text-indigo-400 uppercase tracking-wide font-medium">Professional Assessment</p>
+                </div>
                 <p className="text-neutral-300 text-sm leading-relaxed">{analysis.feedback}</p>
               </div>
             )}
 
+            {/* What You Did Well & What Was Missing */}
+            <div className="grid md:grid-cols-2 gap-4">
+              {analysis.whatYouDidWell && analysis.whatYouDidWell.length > 0 && (
+                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                  <p className="text-xs text-emerald-400 uppercase tracking-wide mb-3 font-medium">✓ What You Did Well</p>
+                  <ul className="space-y-2">
+                    {analysis.whatYouDidWell.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-neutral-300 text-sm">
+                        <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {analysis.whatWasMissing && analysis.whatWasMissing.length > 0 && (
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                  <p className="text-xs text-amber-400 uppercase tracking-wide mb-3 font-medium">⚠ What Was Missing</p>
+                  <ul className="space-y-2">
+                    {analysis.whatWasMissing.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-neutral-300 text-sm">
+                        <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Communication Style Analysis */}
+            {analysis.communicationStyle && (
+              <div className="p-4 rounded-xl bg-neutral-800/50 border border-neutral-700/50">
+                <p className="text-xs text-neutral-400 uppercase tracking-wide mb-3 font-medium">Communication Style</p>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-1">Pace</p>
+                    <p className={`text-sm font-medium ${analysis.communicationStyle.pace === 'appropriate' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {analysis.communicationStyle.pace}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-1">Structure</p>
+                    <p className={`text-sm font-medium ${analysis.communicationStyle.structure === 'well-organized' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {analysis.communicationStyle.structure}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-neutral-500 mb-1">Specificity</p>
+                    <p className={`text-sm font-medium ${analysis.communicationStyle.specificity?.includes('specific') ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {analysis.communicationStyle.specificity}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Key Takeaway */}
+            {analysis.keyTakeaway && (
+              <div className="p-4 rounded-xl bg-violet-500/10 border border-violet-500/20">
+                <div className="flex items-start gap-3">
+                  <Zap className="w-5 h-5 text-violet-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs text-violet-400 uppercase tracking-wide mb-1 font-medium">Key Takeaway</p>
+                    <p className="text-white text-sm font-medium">{analysis.keyTakeaway}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Actionable Suggestions */}
             {analysis.suggestions && analysis.suggestions.length > 0 && (
-              <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20">
-                <p className="text-xs text-indigo-400 uppercase tracking-wide mb-2">Suggestions for Improvement</p>
+              <div className="p-4 rounded-xl bg-sky-500/10 border border-sky-500/20">
+                <p className="text-xs text-sky-400 uppercase tracking-wide mb-3 font-medium">Action Items for Improvement</p>
                 <ul className="space-y-2">
                   {analysis.suggestions.map((suggestion, i) => (
                     <li key={i} className="flex items-start gap-2 text-neutral-300 text-sm">
-                      <Lightbulb className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
+                      <Lightbulb className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
                       {suggestion}
                     </li>
                   ))}
@@ -115,41 +223,25 @@ function QuestionAnalysisCard({ answer, index }) {
               </div>
             )}
 
-            {analysis.idealAnswerPoints && analysis.idealAnswerPoints.length > 0 && (
-              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                <p className="text-xs text-emerald-400 uppercase tracking-wide mb-2">Key Points to Include</p>
-                <ul className="space-y-2">
-                  {analysis.idealAnswerPoints.map((point, i) => (
-                    <li key={i} className="flex items-start gap-2 text-neutral-300 text-sm">
-                      <CheckCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
-                      {point}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {analysis.fillerWords && analysis.fillerWords.words && analysis.fillerWords.words.length > 0 && (
-              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                <p className="text-xs text-amber-400 uppercase tracking-wide mb-2">Filler Words Detected ({analysis.fillerWords.count})</p>
+            {/* Filler Words */}
+            {analysis.fillerWords && analysis.fillerWords.count > 0 && (
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20">
+                <p className="text-xs text-red-400 uppercase tracking-wide mb-2 font-medium">Filler Words Detected ({analysis.fillerWords.count})</p>
                 <div className="flex flex-wrap gap-2">
-                  {analysis.fillerWords.words.map((word, i) => (
-                    <span key={i} className="px-2 py-1 rounded-md bg-amber-500/20 text-amber-300 text-xs">{word}</span>
+                  {analysis.fillerWords.words?.map((word, i) => (
+                    <span key={i} className="px-2 py-1 rounded-md bg-red-500/20 text-red-300 text-xs">{word}</span>
                   ))}
                 </div>
+                <p className="text-xs text-neutral-500 mt-2">Tip: Practice pausing instead of using filler words to sound more confident.</p>
               </div>
             )}
-
-            <div className="p-4 rounded-xl bg-neutral-800/50 border border-neutral-700/50">
-              <p className="text-xs text-neutral-500 uppercase tracking-wide mb-2">Your Response</p>
-              <p className="text-neutral-400 text-sm leading-relaxed italic">"{answer.transcript}"</p>
-            </div>
           </div>
         </motion.div>
       )}
     </div>
   );
 }
+
 
 export default function InterviewPrep() {
   const navigate = useNavigate();
@@ -174,6 +266,13 @@ export default function InterviewPrep() {
     experienceLevel: 'entry',
     questionCount: 10
   });
+
+  // Resume upload state
+  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeText, setResumeText] = useState('');
+  const [resumeLoading, setResumeLoading] = useState(false);
+  const [resumeError, setResumeError] = useState('');
+  const resumeInputRef = useRef(null);
   const [interviewId, setInterviewId] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -382,6 +481,61 @@ export default function InterviewPrep() {
     }
   };
 
+  // Extract text from PDF file using backend API
+  const extractTextFromPDF = async (file) => {
+    try {
+      setResumeLoading(true);
+      setResumeError('');
+
+      // Use backend API to extract text from PDF
+      const response = await uploadApi.extractText(file);
+      // Backend returns { success: true, data: { text: ..., pageCount: ... } }
+      const extractedText = response.data?.text || response.text || '';
+
+      if (!extractedText || extractedText.trim().length < 10) {
+        throw new Error('Could not extract text from PDF. The file may be image-based or corrupted.');
+      }
+
+      setResumeText(extractedText.trim());
+      setResumeFile(file);
+      setResumeLoading(false);
+      return extractedText.trim();
+    } catch (err) {
+      console.error('PDF extraction failed:', err);
+      setResumeError(err.message || 'Failed to extract text from PDF. Please try a different file.');
+      setResumeLoading(false);
+      return '';
+    }
+  };
+
+  // Handle resume file selection
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      setResumeError('Please upload a PDF file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      setResumeError('File size must be less than 5MB');
+      return;
+    }
+
+    await extractTextFromPDF(file);
+  };
+
+  // Remove uploaded resume
+  const removeResume = () => {
+    setResumeFile(null);
+    setResumeText('');
+    setResumeError('');
+    if (resumeInputRef.current) {
+      resumeInputRef.current.value = '';
+    }
+  };
+
   // Confirm A/V is working and start the actual interview
   const confirmAVAndStart = () => {
     if (!avVideoWorking || !avAudioWorking) {
@@ -410,7 +564,11 @@ export default function InterviewPrep() {
     setError('');
 
     try {
-      const response = await interviewApi.startInterview(formData);
+      // Include resume text in API call
+      const response = await interviewApi.startInterview({
+        ...formData,
+        resumeText: resumeText || null
+      });
       setInterviewId(response.data.interviewId);
       setQuestions(response.data.questions);
       setAnswersSubmitted([]);
@@ -822,6 +980,76 @@ export default function InterviewPrep() {
                     <span className="w-12 text-center text-lg font-semibold text-indigo-400">{formData.questionCount}</span>
                   </div>
                   <p className="text-xs text-neutral-500 mt-2">Choose between 2 to 20 questions for your interview</p>
+                </div>
+
+                {/* Resume Upload Section */}
+                <div className="border border-dashed border-neutral-700 rounded-xl p-5 bg-neutral-800/30">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                      <FileUp className="w-5 h-5 text-indigo-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-medium">Upload Resume (Optional)</h3>
+                      <p className="text-xs text-neutral-500">Get personalized questions based on your experience</p>
+                    </div>
+                  </div>
+
+                  {!resumeFile ? (
+                    <div className="relative">
+                      <input
+                        ref={resumeInputRef}
+                        type="file"
+                        accept=".pdf"
+                        onChange={handleResumeUpload}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        disabled={resumeLoading}
+                      />
+                      <div className="flex items-center justify-center gap-2 py-3 px-4 rounded-lg bg-neutral-800/50 border border-neutral-700 hover:border-indigo-500/50 transition-colors cursor-pointer">
+                        {resumeLoading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 text-indigo-400 animate-spin" />
+                            <span className="text-sm text-neutral-400">Extracting text...</span>
+                          </>
+                        ) : (
+                          <>
+                            <FileUp className="w-4 h-4 text-neutral-500" />
+                            <span className="text-sm text-neutral-400">Click to upload resume</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
+                      <div className="flex items-center gap-3 flex-1">
+                        <FileText className="w-5 h-5 text-emerald-400" />
+                        <div className="flex-1">
+                          <p className="text-sm text-emerald-400 font-medium">{resumeFile.name}</p>
+                          {/* Progress bar showing extraction complete */}
+                          <div className="mt-1.5 h-1.5 bg-neutral-700 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500 rounded-full" style={{ width: '100%' }} />
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeResume}
+                        className="p-1.5 rounded-lg hover:bg-neutral-800 transition-colors ml-3"
+                      >
+                        <X className="w-4 h-4 text-neutral-400" />
+                      </button>
+                    </div>
+                  )}
+
+                  {resumeError && (
+                    <p className="text-xs text-red-400 mt-2">{resumeError}</p>
+                  )}
+
+                  {resumeText && (
+                    <div className="mt-3 flex items-center gap-2 text-xs text-indigo-400">
+                      <Sparkles className="w-3 h-3" />
+                      <span>~40% of questions will be personalized based on your resume</span>
+                    </div>
+                  )}
                 </div>
 
                 {error && (

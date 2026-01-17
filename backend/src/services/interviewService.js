@@ -19,9 +19,48 @@ const callGroq = async (prompt) => {
 };
 
 export const generateInterviewQuestions = async (preferences) => {
-  const { jobRole, industry, experienceLevel, questionCount = 10 } = preferences;
+  const { jobRole, industry, experienceLevel, questionCount = 10, resumeText } = preferences;
 
-  const prompt = `You are an expert interview coach. Generate exactly ${questionCount} interview questions for a ${experienceLevel} ${jobRole} position in the ${industry} industry.
+  // Build prompt based on whether resume is provided
+  let prompt;
+
+  if (resumeText && resumeText.trim().length > 100) {
+    // Generate personalized questions based on resume + role
+    prompt = `You are an expert interview coach. Generate exactly ${questionCount} interview questions for a ${experienceLevel} ${jobRole} position in the ${industry} industry.
+
+CANDIDATE'S RESUME:
+${resumeText.substring(0, 4000)}
+
+Return ONLY valid JSON with this exact structure:
+{
+  "questions": [
+    {
+      "question": "<interview question>",
+      "type": "<behavioral/technical/situational/general/resume-based>",
+      "difficulty": "<easy/medium/hard>",
+      "source": "<resume/general>"
+    }
+  ]
+}
+
+IMPORTANT RULES:
+1. Generate a balanced mix of questions:
+   - About 40% should be "resume-based" questions that directly reference the candidate's specific projects, skills, technologies, or experiences from their resume
+   - About 60% should be "general" questions for the ${jobRole} role in ${industry}
+2. For resume-based questions, specifically mention projects, technologies, or experiences from the resume
+3. Progress from easy to hard difficulty
+4. Include behavioral, technical, and situational questions
+5. Adjust complexity for ${experienceLevel} level
+6. Make questions feel personal and tailored to this specific candidate
+7. Generate exactly ${questionCount} questions
+
+Examples of good resume-based questions:
+- "I see you worked on [specific project from resume]. Can you walk me through the architecture decisions you made?"
+- "You mentioned experience with [specific technology]. How did you handle [common challenge]?"
+- "Tell me about a challenge you faced at [company from resume] and how you resolved it."`;
+  } else {
+    // Standard questions without resume
+    prompt = `You are an expert interview coach. Generate exactly ${questionCount} interview questions for a ${experienceLevel} ${jobRole} position in the ${industry} industry.
 
 Return ONLY valid JSON with this exact structure:
 {
@@ -29,7 +68,8 @@ Return ONLY valid JSON with this exact structure:
     {
       "question": "<interview question>",
       "type": "<behavioral/technical/situational/general>",
-      "difficulty": "<easy/medium/hard>"
+      "difficulty": "<easy/medium/hard>",
+      "source": "general"
     }
   ]
 }
@@ -41,6 +81,7 @@ Rules:
 4. Include industry-specific scenarios for ${industry}
 5. Adjust complexity for ${experienceLevel} level
 6. Generate exactly ${questionCount} questions`;
+  }
 
   const text = await callGroq(prompt);
   const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
@@ -50,36 +91,49 @@ Rules:
     questionId: generateQuestionId(),
     question: q.question,
     type: q.type,
-    difficulty: q.difficulty
+    difficulty: q.difficulty,
+    source: q.source || 'general'
   }));
 };
 
 export const analyzeAnswer = async (question, transcript, duration) => {
-  const prompt = `You are an expert interview coach analyzing a candidate's response.
+  const prompt = `You are a senior interview coach at a top tech company, providing detailed professional feedback on a candidate's interview response.
 
-Question: "${question}"
-Candidate's Answer: "${transcript}"
-Duration: ${duration} seconds
+QUESTION ASKED: "${question}"
 
-Return ONLY valid JSON with this structure:
+CANDIDATE'S RESPONSE: "${transcript}"
+
+RESPONSE DURATION: ${duration} seconds
+
+Analyze this response thoroughly and return ONLY valid JSON with this exact structure:
 {
-  "relevance": <0-100 how relevant the answer is to the question>,
-  "clarity": <0-100 how clear and well-structured>,
-  "confidence": <0-100 based on language used>,
-  "feedback": "<2-3 sentence constructive feedback>",
-  "suggestions": ["<specific improvement 1>", "<improvement 2>"],
+  "relevance": <0-100 how directly the answer addresses the question>,
+  "clarity": <0-100 how clear, logical, and well-structured the response is>,
+  "confidence": <0-100 based on language conviction and assertiveness>,
+  "feedback": "<3-4 sentence professional assessment of the overall response quality>",
+  "whatYouDidWell": ["<specific strength 1>", "<specific strength 2>"],
+  "whatWasMissing": ["<critical missing element 1>", "<missing element 2>"],
+  "suggestions": ["<specific actionable improvement 1>", "<actionable improvement 2>", "<actionable improvement 3>"],
+  "idealAnswer": "<A model STAR-format answer (2-3 sentences) showing how a top candidate would respond to this exact question. Be specific and practical.>",
+  "communicationStyle": {
+    "pace": "<too fast/appropriate/too slow>",
+    "structure": "<well-organized/somewhat organized/disorganized>",
+    "specificity": "<specific with examples/somewhat specific/too vague>"
+  },
   "fillerWords": {
     "count": <number of filler words detected>,
     "words": ["<filler word 1>", "<filler word 2>"]
   },
-  "idealAnswerPoints": ["<key point that should be mentioned>"]
+  "keyTakeaway": "<One sentence summary of the most important thing to improve for next time>"
 }
 
-Rules:
-1. Be encouraging but honest
-2. Provide actionable suggestions
-3. Score fairly based on content quality
-4. Detect filler words like "um", "uh", "like", "you know", "basically"`;
+CRITICAL RULES:
+1. Be professional, specific, and actionable - avoid generic feedback
+2. The idealAnswer should be a complete example answer, not just tips
+3. Identify concrete strengths and gaps in the response
+4. For whatWasMissing, focus on content gaps, not delivery
+5. Detect filler words: "um", "uh", "like", "you know", "basically", "actually", "so", "I mean"
+6. Score fairly: 90+ = exceptional, 70-89 = good, 50-69 = needs work, <50 = significant gaps`;
 
   const text = await callGroq(prompt);
   const cleanedText = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();

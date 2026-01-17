@@ -80,9 +80,6 @@ function Logo() {
                 <span className="text-xl font-bold text-white whitespace-pre">
                     Velocity
                 </span>
-                <span className="px-2 py-0.5 text-xs font-medium bg-indigo-500/20 text-indigo-400 rounded-full border border-indigo-500/30">
-                    Pro
-                </span>
             </motion.div>
         </div>
     );
