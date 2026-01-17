@@ -820,3 +820,48 @@ export const interviewApi = {
     return handleResponse(response)
   }
 }
+
+// ============ PAYMENT API ============
+export const paymentApi = {
+  // Create Razorpay order for proposal acceptance
+  async createOrder(proposalId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/payments/create-order`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ proposalId })
+    })
+    return handleResponse(response)
+  },
+
+  // Verify payment after Razorpay checkout
+  async verifyPayment(data) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/payments/verify-payment`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data)
+    })
+    return handleResponse(response)
+  },
+
+  // Release funds from escrow
+  async releaseFunds(roomId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/payments/release-funds/${roomId}`, {
+      method: 'POST',
+      headers
+    })
+    return handleResponse(response)
+  },
+
+  // Get payment status for a room
+  async getStatus(roomId) {
+    const headers = await getAuthHeaders()
+    const response = await fetch(`${API_BASE}/payments/status/${roomId}`, {
+      method: 'GET',
+      headers
+    })
+    return handleResponse(response)
+  }
+}

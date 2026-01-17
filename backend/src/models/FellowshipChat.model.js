@@ -29,6 +29,32 @@ const fellowshipChatRoomSchema = new mongoose.Schema({
         enum: ['active', 'closed'],
         default: 'active'
     },
+    // Payment/Escrow tracking fields
+    paymentStatus: {
+        type: String,
+        enum: ['pending', 'escrow', 'released', 'refunded'],
+        default: 'pending'
+    },
+    razorpayOrderId: {
+        type: String,
+        default: null
+    },
+    razorpayPaymentId: {
+        type: String,
+        default: null
+    },
+    amount: {
+        type: Number,
+        default: 0
+    },
+    paidAt: {
+        type: Date,
+        default: null
+    },
+    releasedAt: {
+        type: Date,
+        default: null
+    },
     lastMessageAt: {
         type: Date,
         default: Date.now

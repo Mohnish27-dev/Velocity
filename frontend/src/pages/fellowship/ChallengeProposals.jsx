@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom'
-import { fellowshipApi } from '../../services/api'
+import { fellowshipApi, paymentApi } from '../../services/api'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
 import {
@@ -14,7 +14,8 @@ import {
     Loader2,
     FileText,
     Mail,
-    MessageCircle
+    MessageCircle,
+    CreditCard
 } from 'lucide-react'
 
 const STATUS_CONFIG = {
@@ -70,23 +71,109 @@ export default function ChallengeProposals() {
 
     const handleUpdateStatus = async (proposalId, status) => {
         setUpdating(proposalId)
+
         try {
-            const response = await fellowshipApi.updateProposalStatus(proposalId, status, feedback)
-            toast.success(`Proposal ${status}!`)
-            setShowFeedbackFor(null)
-            setFeedback('')
+            if (status === 'accepted') {
+                // For acceptance, initiate payment flow
+                const orderRes = await paymentApi.createOrder(proposalId)
+                const orderData = orderRes.data
 
-            if (status === 'accepted' && response.chatRoom) {
-                setChatRooms(prev => ({
-                    ...prev,
-                    [proposalId]: response.chatRoom
-                }))
+                // Configure Razorpay options with all payment methods
+                const options = {
+                    key: orderData.keyId,
+                    amount: orderData.amount,
+                    currency: orderData.currency,
+                    name: 'Velocity Fellowships',
+                    description: `Payment for: ${orderData.challengeTitle}`,
+                    order_id: orderData.orderId,
+                    handler: async function (response) {
+                        try {
+                            // Verify payment and complete acceptance
+                            const verifyRes = await paymentApi.verifyPayment({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                proposalId: proposalId,
+                                feedback: feedback
+                            })
+
+                            toast.success('Payment successful! Proposal accepted.')
+                            setShowFeedbackFor(null)
+                            setFeedback('')
+
+                            if (verifyRes.data.chatRoom) {
+                                setChatRooms(prev => ({
+                                    ...prev,
+                                    [proposalId]: verifyRes.data.chatRoom
+                                }))
+                            }
+
+                            loadData()
+                        } catch (err) {
+                            toast.error(err.message || 'Payment verification failed')
+                        } finally {
+                            setUpdating(null)
+                        }
+                    },
+                    prefill: {
+                        name: profile?.companyName || '',
+                        email: '',
+                        contact: ''
+                    },
+                    notes: {
+                        proposalId: proposalId,
+                        studentName: orderData.studentName
+                    },
+                    theme: {
+                        color: '#10b981'
+                    },
+                    modal: {
+                        ondismiss: function () {
+                            setUpdating(null)
+                            toast.error('Payment cancelled')
+                        }
+                    },
+                    // Enable all payment methods
+                    config: {
+                        display: {
+                            blocks: {
+                                banks: {
+                                    name: 'Pay via UPI/Cards/NetBanking',
+                                    instruments: [
+                                        { method: 'upi' },
+                                        { method: 'card' },
+                                        { method: 'netbanking' },
+                                        { method: 'wallet' }
+                                    ]
+                                }
+                            },
+                            sequence: ['block.banks'],
+                            preferences: {
+                                show_default_blocks: true
+                            }
+                        }
+                    }
+                }
+
+                // Open Razorpay checkout
+                const rzp = new window.Razorpay(options)
+                rzp.on('payment.failed', function (response) {
+                    toast.error('Payment failed: ' + response.error.description)
+                    setUpdating(null)
+                })
+                rzp.open()
+
+            } else {
+                // For rejection, use the old direct update flow
+                await fellowshipApi.updateProposalStatus(proposalId, status, feedback)
+                toast.success(`Proposal ${status}!`)
+                setShowFeedbackFor(null)
+                setFeedback('')
+                loadData()
+                setUpdating(null)
             }
-
-            loadData()
         } catch (error) {
-            toast.error(error.message || 'Failed to update status')
-        } finally {
+            toast.error(error.message || 'Failed to process')
             setUpdating(null)
         }
     }

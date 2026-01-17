@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom'
-import { fellowshipApi } from '../../services/api'
+import { fellowshipApi, paymentApi } from '../../services/api'
 import { useSocket } from '../../context/SocketContext'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
@@ -10,7 +10,10 @@ import {
     Loader2,
     MessageCircle,
     User,
-    Clock
+    Clock,
+    CheckCircle,
+    Wallet,
+    AlertTriangle
 } from 'lucide-react'
 
 export default function FellowshipChat() {
@@ -26,6 +29,8 @@ export default function FellowshipChat() {
     const [newMessage, setNewMessage] = useState('')
     const [loading, setLoading] = useState(true)
     const [sending, setSending] = useState(false)
+    const [releasingFunds, setReleasingFunds] = useState(false)
+    const [showReleaseConfirm, setShowReleaseConfirm] = useState(false)
 
     useEffect(() => {
         loadRoom()
@@ -119,6 +124,25 @@ export default function FellowshipChat() {
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     }
 
+    const handleReleaseFunds = async () => {
+        if (releasingFunds) return
+        setReleasingFunds(true)
+
+        try {
+            await paymentApi.releaseFunds(roomId)
+            toast.success('Funds released! Challenge marked as completed.')
+            setShowReleaseConfirm(false)
+            navigate('/fellowship/messages')
+        } catch (error) {
+            toast.error(error.message || 'Failed to release funds')
+        } finally {
+            setReleasingFunds(false)
+        }
+    }
+
+    // Check if user is corporate and payment is in escrow
+    const canReleaseFunds = profile?.role === 'corporate' && room?.paymentStatus === 'escrow'
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-[60vh]">
@@ -149,7 +173,33 @@ export default function FellowshipChat() {
                         <p className="text-xs text-neutral-500">{room.challengeTitle}</p>
                     </div>
                 </div>
-                <div className="ml-auto flex items-center gap-2">
+                <div className="ml-auto flex items-center gap-3">
+                    {/* Payment Status Badge */}
+                    {room.paymentStatus === 'escrow' && (
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-950 text-amber-400 rounded-lg text-xs">
+                            <Wallet className="w-3.5 h-3.5" />
+                            In Escrow
+                        </span>
+                    )}
+                    {room.paymentStatus === 'released' && (
+                        <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-950 text-emerald-400 rounded-lg text-xs">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Completed
+                        </span>
+                    )}
+
+                    {/* Release Funds Button - Only for corporate when in escrow */}
+                    {canReleaseFunds && (
+                        <button
+                            onClick={() => setShowReleaseConfirm(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-medium transition-colors"
+                        >
+                            <CheckCircle className="w-4 h-4" />
+                            Release Funds
+                        </button>
+                    )}
+
+                    {/* Connection Status */}
                     {isConnected ? (
                         <span className="flex items-center gap-1 text-xs text-emerald-400">
                             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
@@ -163,6 +213,59 @@ export default function FellowshipChat() {
                     )}
                 </div>
             </div>
+
+            {/* Release Funds Confirmation Modal */}
+            {showReleaseConfirm && (
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 max-w-md w-full mx-4"
+                    >
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="w-12 h-12 bg-emerald-950 rounded-full flex items-center justify-center">
+                                <Wallet className="w-6 h-6 text-emerald-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-white">Release Funds</h3>
+                                <p className="text-sm text-neutral-400">₹{room.amount?.toLocaleString('en-IN')}</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-amber-950/50 border border-amber-900/50 rounded-lg p-4 mb-6">
+                            <div className="flex items-start gap-2">
+                                <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                                <div className="text-sm text-amber-200">
+                                    <p className="font-medium mb-1">This action is final</p>
+                                    <p className="text-amber-300/80">Releasing funds will mark the challenge as completed and close this chat. Make sure you're satisfied with the work delivered.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowReleaseConfirm(false)}
+                                disabled={releasingFunds}
+                                className="flex-1 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg font-medium disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleReleaseFunds}
+                                disabled={releasingFunds}
+                                className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                            >
+                                {releasingFunds ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    <CheckCircle className="w-4 h-4" />
+                                )}
+                                Confirm Release
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
 
             <div className="flex-1 overflow-y-auto py-4 space-y-4">
                 {messages.length === 0 ? (
