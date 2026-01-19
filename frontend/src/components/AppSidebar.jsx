@@ -66,8 +66,8 @@ function Logo() {
 
     return (
         <div className="flex items-center gap-3 py-2 px-1">
-            <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center">
-                <img src="/speed.png" alt="Velocity" className="w-8 h-8" />
+            <div className="w-12 h-8 flex-shrink-0 flex items-center justify-center">
+                <img src="/speed.png" alt="Velocity" className="w-12 h-8 object-contain" />
             </div>
             <motion.div
                 animate={{
