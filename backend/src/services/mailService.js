@@ -14,9 +14,9 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: false
   },
   family: 4, // Force IPv4
-  connectionTimeout: 60000, // 10 seconds
-  greetingTimeout: 60000, // 5 seconds
-  socketTimeout: 60000 // 10 seconds
+  connectionTimeout: 10000, // 10 seconds
+  greetingTimeout: 5000, // 5 seconds
+  socketTimeout: 10000 // 10 seconds
 });
 
 // Verify transporter on startup

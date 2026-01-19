@@ -70,20 +70,21 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 
 ### Comprehensive Career Platform
 
-| Challenge | Solution |
-|-----------|----------|
-| **Resume Optimization** | AI-powered resume enhancement using Google Gemini 2.5 with ATS scoring and Harvard-format templates |
-| **Information Overload** | Smart job alerts with customizable filters (keywords, location, salary, employment type) |
-| **Application Tracking** | Visual Kanban-style job tracker with status management (Saved → Applied → Interviewing → Offered) |
-| **Isolation** | Real-time community platform with channels, posts, direct messaging, and presence indicators |
-| **Skill Gaps** | AI-generated improvement suggestions and professional summary generation |
-| **Time Consumption** | Automated job fetching, bulk processing via queues, and one-click resume downloads |
+| Challenge                | Solution                                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------- |
+| **Resume Optimization**  | AI-powered resume enhancement using Google Gemini 2.5 with ATS scoring and Harvard-format templates |
+| **Information Overload** | Smart job alerts with customizable filters (keywords, location, salary, employment type)            |
+| **Application Tracking** | Visual Kanban-style job tracker with status management (Saved → Applied → Interviewing → Offered)   |
+| **Isolation**            | Real-time community platform with channels, posts, direct messaging, and presence indicators        |
+| **Skill Gaps**           | AI-generated improvement suggestions and professional summary generation                            |
+| **Time Consumption**     | Automated job fetching, bulk processing via queues, and one-click resume downloads                  |
 
 ---
 
 ## ✨ Features
 
 ### 🤖 AI-Powered Resume Enhancement
+
 - **Smart Resume Enhancement**: Transform ordinary resumes into ATS-optimized documents
 - **Professional Summary Generation**: AI-crafted summaries tailored to target roles
 - **Improvement Suggestions**: Actionable recommendations to strengthen your resume
@@ -91,12 +92,14 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 - **Harvard Template Formatting**: Industry-standard resume formatting
 
 ### 📄 Resume Management
+
 - **PDF Upload & Parsing**: Extract text from uploaded PDF resumes
 - **Multiple Resume Support**: Manage different versions for various roles
 - **PDF Download**: Export enhanced resumes as professional PDFs
 - **Version History**: Track original and enhanced versions
 
 ### 🔔 Intelligent Job Alerts
+
 - **Custom Alert Creation**: Set preferences for keywords, location, salary range
 - **Remote Work Filters**: Find remote-only opportunities
 - **Employment Type Selection**: Full-time, Part-time, Contract, Internship
@@ -104,6 +107,7 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 - **Real-time Socket Updates**: Instant in-app notifications when new jobs match
 
 ### 📊 Job Application Tracker
+
 - **Visual Pipeline**: Kanban-style board for application status
 - **Status Management**: Track from Saved → Applied → Interviewing → Offered → Rejected
 - **Notes & Comments**: Add personal notes to each application
@@ -111,6 +115,7 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 - **Quick Actions**: Easy status updates and job removal
 
 ### 🌐 Community Platform
+
 - **Real-time Channels**: Topic-based discussion channels
 - **Posts & Feed**: Share experiences, tips, and opportunities
 - **Comments & Reactions**: Engage with community content
@@ -119,6 +124,7 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 - **Member Discovery**: Find and connect with fellow job seekers
 
 ### 🎓 Velocity Fellowships
+
 - **Corporate Challenges**: Companies post real-world challenges for students
 - **Student Proposals**: Students submit proposals with cover letters and pricing
 - **Proposal Review**: Companies review, accept, or reject proposals
@@ -128,6 +134,7 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 - **Student Verification**: Academic email verification system
 
 ### 🎤 AI Interview Prep
+
 - **Mock Interviews**: AI-powered interview simulations
 - **Role-Specific Questions**: Tailored questions based on target role
 - **Real-time Feedback**: Instant AI evaluation of responses
@@ -136,6 +143,7 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 - **Multi-Round Support**: Technical, behavioral, and HR round simulations
 
 ### 💳 Payments (Razorpay)
+
 - **Secure Payments**: PCI-DSS compliant payment processing
 - **Multiple Payment Methods**: UPI, Cards, NetBanking, Wallets, QR Code
 - **Escrow System**: Funds held securely until work completion
@@ -143,6 +151,7 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 - **Payment History**: Complete transaction tracking
 
 ### 🔐 Authentication & Security
+
 - **Firebase Authentication**: Secure email/password and Google OAuth
 - **JWT Token Verification**: Protected API endpoints
 - **Rate Limiting**: Protection against abuse
@@ -153,41 +162,44 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 ## 🛠 Tech Stack
 
 ### Frontend
-| Technology | Purpose |
-|------------|---------|
-| **React 19** | UI library with latest features |
-| **Vite 7** | Fast build tool and dev server |
-| **TailwindCSS 4** | Utility-first CSS framework |
-| **Framer Motion** | Animation library |
-| **React Router 7** | Client-side routing |
-| **Socket.IO Client** | Real-time communication |
-| **Firebase SDK** | Authentication & client services |
-| **Zustand** | State management |
-| **React Hook Form** | Form handling |
-| **Lucide React** | Icon library |
+
+| Technology           | Purpose                          |
+| -------------------- | -------------------------------- |
+| **React 19**         | UI library with latest features  |
+| **Vite 7**           | Fast build tool and dev server   |
+| **TailwindCSS 4**    | Utility-first CSS framework      |
+| **Framer Motion**    | Animation library                |
+| **React Router 7**   | Client-side routing              |
+| **Socket.IO Client** | Real-time communication          |
+| **Firebase SDK**     | Authentication & client services |
+| **Zustand**          | State management                 |
+| **React Hook Form**  | Form handling                    |
+| **Lucide React**     | Icon library                     |
 
 ### Backend
-| Technology | Purpose |
-|------------|---------|
-| **Node.js 18+** | JavaScript runtime |
-| **Express.js** | Web framework |
-| **Socket.IO** | WebSocket server |
-| **Firebase Admin SDK** | Server-side Firebase services |
-| **MongoDB + Mongoose** | Database & ODM |
-| **BullMQ + IORedis** | Job queue for background tasks |
-| **Google Gemini AI** | AI/ML for resume enhancement & interviews |
-| **Razorpay** | Payment processing & escrow |
-| **Nodemailer** | Email notifications |
-| **PDFKit** | PDF generation |
-| **Node-Cron** | Scheduled tasks |
+
+| Technology             | Purpose                                   |
+| ---------------------- | ----------------------------------------- |
+| **Node.js 18+**        | JavaScript runtime                        |
+| **Express.js**         | Web framework                             |
+| **Socket.IO**          | WebSocket server                          |
+| **Firebase Admin SDK** | Server-side Firebase services             |
+| **MongoDB + Mongoose** | Database & ODM                            |
+| **BullMQ + IORedis**   | Job queue for background tasks            |
+| **Google Gemini AI**   | AI/ML for resume enhancement & interviews |
+| **Razorpay**           | Payment processing & escrow               |
+| **Nodemailer**         | Email notifications                       |
+| **PDFKit**             | PDF generation                            |
+| **Node-Cron**          | Scheduled tasks                           |
 
 ### Infrastructure
-| Technology | Purpose |
-|------------|---------|
-| **Firebase** | Auth, Firestore, Storage |
-| **MongoDB Atlas** | Cloud database |
-| **Redis** | Queue backend |
-| **RapidAPI** | Job search integration |
+
+| Technology        | Purpose                  |
+| ----------------- | ------------------------ |
+| **Firebase**      | Auth, Firestore, Storage |
+| **MongoDB Atlas** | Cloud database           |
+| **Redis**         | Queue backend            |
+| **RapidAPI**      | Job search integration   |
 
 ---
 
@@ -206,6 +218,7 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 ### Environment Variables
 
 #### Backend (.env)
+
 ```env
 # Server
 PORT=5000
@@ -248,6 +261,7 @@ RAZORPAY_KEY_SECRET=your-razorpay-secret
 ```
 
 #### Frontend (.env)
+
 ```env
 VITE_API_URL=http://localhost:5000
 VITE_FIREBASE_API_KEY=your-api-key
@@ -261,24 +275,28 @@ VITE_FIREBASE_APP_ID=your-app-id
 ### Installation
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/your-username/ai-resume-builder.git
 cd ai-resume-builder
 ```
 
 2. **Install backend dependencies**
+
 ```bash
 cd backend
 npm install
 ```
 
 3. **Install frontend dependencies**
+
 ```bash
 cd ../frontend
 npm install
 ```
 
 4. **Set up environment variables**
+
 ```bash
 # Create .env files in both backend and frontend directories
 # Use the templates above
@@ -287,18 +305,21 @@ npm install
 5. **Start the development servers**
 
 Backend:
+
 ```bash
 cd backend
 npm run dev
 ```
 
 Frontend:
+
 ```bash
 cd frontend
 npm run dev
 ```
 
 6. **Access the application**
+
 - Frontend: http://localhost:5173
 - Backend API: http://localhost:5000
 - Health Check: http://localhost:5000/health
@@ -334,7 +355,6 @@ GdocNitp/
 │       │   ├── TrackedJob.model.js  # Application tracking
 │       │   └── User.model.js        # User profiles
 │       ├── routes/
-│       │   ├── admin.js             # Admin operations
 │       │   ├── auth.js              # Authentication
 │       │   ├── community.js         # Community features
 │       │   ├── enhance.js           # AI enhancement
@@ -445,117 +465,121 @@ GdocNitp/
 ## 🔌 API Routes
 
 ### Authentication
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/auth/verify` | Verify Firebase token |
-| `GET` | `/api/auth/profile` | Get user profile |
+
+| Method | Endpoint            | Description           |
+| ------ | ------------------- | --------------------- |
+| `POST` | `/api/auth/verify`  | Verify Firebase token |
+| `GET`  | `/api/auth/profile` | Get user profile      |
 
 ### Upload
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/upload` | Upload and parse PDF resume |
-| `POST` | `/api/upload/extract-text` | Extract text from PDF |
+
+| Method | Endpoint                   | Description                 |
+| ------ | -------------------------- | --------------------------- |
+| `POST` | `/api/upload`              | Upload and parse PDF resume |
+| `POST` | `/api/upload/extract-text` | Extract text from PDF       |
 
 ### Resume Management
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/resumes` | Get all user resumes |
-| `GET` | `/api/resumes/:resumeId` | Get specific resume |
-| `POST` | `/api/resumes` | Create new resume |
-| `PUT` | `/api/resumes/:resumeId` | Update resume |
-| `DELETE` | `/api/resumes/:resumeId` | Delete resume |
-| `GET` | `/api/resumes/:resumeId/download` | Download as PDF |
+
+| Method   | Endpoint                          | Description          |
+| -------- | --------------------------------- | -------------------- |
+| `GET`    | `/api/resumes`                    | Get all user resumes |
+| `GET`    | `/api/resumes/:resumeId`          | Get specific resume  |
+| `POST`   | `/api/resumes`                    | Create new resume    |
+| `PUT`    | `/api/resumes/:resumeId`          | Update resume        |
+| `DELETE` | `/api/resumes/:resumeId`          | Delete resume        |
+| `GET`    | `/api/resumes/:resumeId/download` | Download as PDF      |
 
 ### AI Enhancement
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/enhance` | Enhance resume with AI |
-| `POST` | `/api/enhance/summary` | Generate professional summary |
-| `POST` | `/api/enhance/suggestions` | Get improvement suggestions |
-| `POST` | `/api/enhance/ats-analysis` | Analyze ATS compatibility |
+
+| Method | Endpoint                    | Description                   |
+| ------ | --------------------------- | ----------------------------- |
+| `POST` | `/api/enhance`              | Enhance resume with AI        |
+| `POST` | `/api/enhance/summary`      | Generate professional summary |
+| `POST` | `/api/enhance/suggestions`  | Get improvement suggestions   |
+| `POST` | `/api/enhance/ats-analysis` | Analyze ATS compatibility     |
 
 ### Job Search
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/fetchjobs` | Search for jobs |
+
+| Method | Endpoint         | Description     |
+| ------ | ---------------- | --------------- |
+| `GET`  | `/api/fetchjobs` | Search for jobs |
 
 ### Job Alerts
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/job-alerts` | Get all alerts |
-| `GET` | `/api/job-alerts/stats/summary` | Get alert statistics |
-| `GET` | `/api/job-alerts/:id` | Get specific alert |
-| `POST` | `/api/job-alerts` | Create new alert |
-| `PUT` | `/api/job-alerts/:id` | Update alert |
-| `DELETE` | `/api/job-alerts/:id` | Delete alert |
+
+| Method   | Endpoint                        | Description          |
+| -------- | ------------------------------- | -------------------- |
+| `GET`    | `/api/job-alerts`               | Get all alerts       |
+| `GET`    | `/api/job-alerts/stats/summary` | Get alert statistics |
+| `GET`    | `/api/job-alerts/:id`           | Get specific alert   |
+| `POST`   | `/api/job-alerts`               | Create new alert     |
+| `PUT`    | `/api/job-alerts/:id`           | Update alert         |
+| `DELETE` | `/api/job-alerts/:id`           | Delete alert         |
 
 ### Job Tracker
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/job-tracker` | Get all tracked jobs |
-| `GET` | `/api/job-tracker/stats` | Get tracking statistics |
-| `POST` | `/api/job-tracker` | Track new job |
-| `PUT` | `/api/job-tracker/:trackerId` | Update job status |
-| `DELETE` | `/api/job-tracker/:trackerId` | Remove tracked job |
+
+| Method   | Endpoint                      | Description             |
+| -------- | ----------------------------- | ----------------------- |
+| `GET`    | `/api/job-tracker`            | Get all tracked jobs    |
+| `GET`    | `/api/job-tracker/stats`      | Get tracking statistics |
+| `POST`   | `/api/job-tracker`            | Track new job           |
+| `PUT`    | `/api/job-tracker/:trackerId` | Update job status       |
+| `DELETE` | `/api/job-tracker/:trackerId` | Remove tracked job      |
 
 ### Community
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/community/channels` | Get all channels |
-| `POST` | `/api/community/channels` | Create channel |
-| `GET` | `/api/community/channels/:channelId/messages` | Get channel messages |
-| `GET` | `/api/community/posts` | Get all posts |
-| `POST` | `/api/community/posts` | Create post |
-| `POST` | `/api/community/posts/:postId/like` | Toggle like |
-| `GET` | `/api/community/posts/:postId/comments` | Get comments |
-| `POST` | `/api/community/posts/:postId/comments` | Add comment |
-| `GET` | `/api/community/conversations` | Get DM conversations |
-| `GET` | `/api/community/online-users` | Get online users |
+
+| Method | Endpoint                                      | Description          |
+| ------ | --------------------------------------------- | -------------------- |
+| `GET`  | `/api/community/channels`                     | Get all channels     |
+| `POST` | `/api/community/channels`                     | Create channel       |
+| `GET`  | `/api/community/channels/:channelId/messages` | Get channel messages |
+| `GET`  | `/api/community/posts`                        | Get all posts        |
+| `POST` | `/api/community/posts`                        | Create post          |
+| `POST` | `/api/community/posts/:postId/like`           | Toggle like          |
+| `GET`  | `/api/community/posts/:postId/comments`       | Get comments         |
+| `POST` | `/api/community/posts/:postId/comments`       | Add comment          |
+| `GET`  | `/api/community/conversations`                | Get DM conversations |
+| `GET`  | `/api/community/online-users`                 | Get online users     |
 
 ### Fellowships
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/api/fellowship/profile` | Get fellowship profile |
-| `POST` | `/api/fellowship/profile` | Create/update profile |
-| `POST` | `/api/fellowship/verify/send-email` | Send verification email |
-| `POST` | `/api/fellowship/verify/confirm` | Confirm verification code |
-| `GET` | `/api/fellowship/challenges` | Get all challenges |
-| `POST` | `/api/fellowship/challenges` | Create challenge (Corporate) |
-| `GET` | `/api/fellowship/challenges/:id` | Get challenge details |
-| `DELETE` | `/api/fellowship/challenges/:id` | Delete challenge |
-| `POST` | `/api/fellowship/challenges/:id/apply` | Apply to challenge (Student) |
-| `GET` | `/api/fellowship/challenges/:id/proposals` | Get proposals for challenge |
-| `PUT` | `/api/fellowship/proposals/:id/status` | Accept/reject proposal |
-| `GET` | `/api/fellowship/my-challenges` | Get my challenges (Corporate) |
-| `GET` | `/api/fellowship/my-proposals` | Get my proposals (Student) |
-| `GET` | `/api/fellowship/chat/rooms` | Get chat rooms |
-| `GET` | `/api/fellowship/chat/rooms/:roomId` | Get chat room details |
-| `GET` | `/api/fellowship/chat/rooms/:roomId/messages` | Get messages |
-| `POST` | `/api/fellowship/chat/rooms/:roomId/messages` | Send message |
+
+| Method   | Endpoint                                      | Description                   |
+| -------- | --------------------------------------------- | ----------------------------- |
+| `GET`    | `/api/fellowship/profile`                     | Get fellowship profile        |
+| `POST`   | `/api/fellowship/profile`                     | Create/update profile         |
+| `POST`   | `/api/fellowship/verify/send-email`           | Send verification email       |
+| `POST`   | `/api/fellowship/verify/confirm`              | Confirm verification code     |
+| `GET`    | `/api/fellowship/challenges`                  | Get all challenges            |
+| `POST`   | `/api/fellowship/challenges`                  | Create challenge (Corporate)  |
+| `GET`    | `/api/fellowship/challenges/:id`              | Get challenge details         |
+| `DELETE` | `/api/fellowship/challenges/:id`              | Delete challenge              |
+| `POST`   | `/api/fellowship/challenges/:id/apply`        | Apply to challenge (Student)  |
+| `GET`    | `/api/fellowship/challenges/:id/proposals`    | Get proposals for challenge   |
+| `PUT`    | `/api/fellowship/proposals/:id/status`        | Accept/reject proposal        |
+| `GET`    | `/api/fellowship/my-challenges`               | Get my challenges (Corporate) |
+| `GET`    | `/api/fellowship/my-proposals`                | Get my proposals (Student)    |
+| `GET`    | `/api/fellowship/chat/rooms`                  | Get chat rooms                |
+| `GET`    | `/api/fellowship/chat/rooms/:roomId`          | Get chat room details         |
+| `GET`    | `/api/fellowship/chat/rooms/:roomId/messages` | Get messages                  |
+| `POST`   | `/api/fellowship/chat/rooms/:roomId/messages` | Send message                  |
 
 ### Interview Prep
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/interview/start` | Start mock interview |
-| `POST` | `/api/interview/:id/answer` | Submit answer |
-| `POST` | `/api/interview/:id/complete` | Complete interview |
-| `GET` | `/api/interview/:id` | Get interview details |
-| `GET` | `/api/interview/history` | Get interview history |
+
+| Method | Endpoint                      | Description           |
+| ------ | ----------------------------- | --------------------- |
+| `POST` | `/api/interview/start`        | Start mock interview  |
+| `POST` | `/api/interview/:id/answer`   | Submit answer         |
+| `POST` | `/api/interview/:id/complete` | Complete interview    |
+| `GET`  | `/api/interview/:id`          | Get interview details |
+| `GET`  | `/api/interview/history`      | Get interview history |
 
 ### Payments
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/payments/create-order` | Create Razorpay order |
-| `POST` | `/api/payments/verify-payment` | Verify payment & accept proposal |
-| `POST` | `/api/payments/release-funds/:roomId` | Release escrow funds |
-| `GET` | `/api/payments/status/:roomId` | Get payment status |
 
-### Admin
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/admin/sync-to-firebase` | Sync MongoDB to Firebase |
-| `POST` | `/api/admin/save-my-profile` | Save profile to Firebase |
-| `GET` | `/api/admin/stats` | Get system statistics |
+| Method | Endpoint                              | Description                      |
+| ------ | ------------------------------------- | -------------------------------- |
+| `POST` | `/api/payments/create-order`          | Create Razorpay order            |
+| `POST` | `/api/payments/verify-payment`        | Verify payment & accept proposal |
+| `POST` | `/api/payments/release-funds/:roomId` | Release escrow funds             |
+| `GET`  | `/api/payments/status/:roomId`        | Get payment status               |
 
 > 📚 **For complete API documentation, see [API_DOCS/README.md](./API_DOCS/README.md)**
 
@@ -624,6 +648,7 @@ npm run preview
 ```
 
 **Environment Variables to Set:**
+
 - All `VITE_*` variables from frontend .env
 
 ### Backend Deployment (Railway/Render/Heroku)
@@ -635,6 +660,7 @@ npm start
 ```
 
 **Environment Variables to Set:**
+
 - All variables from backend .env
 - Ensure `NODE_ENV=production`
 
@@ -650,12 +676,14 @@ npm start
 ### Database Setup
 
 **MongoDB Atlas:**
+
 1. Create cluster
 2. Add database user
 3. Whitelist IP addresses
 4. Get connection string
 
 **Redis (Upstash/Redis Cloud):**
+
 1. Create Redis instance
 2. Get connection credentials
 3. Configure BullMQ
@@ -664,12 +692,12 @@ npm start
 
 ## 📖 Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Architecture](./ARCHITECTURE.md) | System architecture, data flows, database schemas |
-| [API Reference](./API_DOCS/README.md) | Complete API documentation |
-| [Real-World Use Cases](./Real_life_usecase.md) | Success stories and applications |
-| [Contributing Guide](./CONTRIBUTION.md) | How to contribute to the project |
+| Document                                       | Description                                       |
+| ---------------------------------------------- | ------------------------------------------------- |
+| [Architecture](./ARCHITECTURE.md)              | System architecture, data flows, database schemas |
+| [API Reference](./API_DOCS/README.md)          | Complete API documentation                        |
+| [Real-World Use Cases](./Real_life_usecase.md) | Success stories and applications                  |
+| [Contributing Guide](./CONTRIBUTION.md)        | How to contribute to the project                  |
 
 ---
 
@@ -700,6 +728,17 @@ We welcome contributions! Please see our [CONTRIBUTION.md](./CONTRIBUTION.md) fo
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+---
+
+## 👥 Team Members
+
+- **Harshita Bhansali (Team Leader)**
+- **Gungun Wadhwani (Team Member 1)**
+- **Mohnish Pamnani (Team Member 2)**
+- **Shivang Jaiswal (Team Member 3)**
 
 ---
 
