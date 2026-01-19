@@ -23,9 +23,9 @@ const transporter = nodemailer.createTransport({
         rejectUnauthorized: false
     },
     family: 4, // Force IPv4
-    connectionTimeout: 10000,
-    greetingTimeout: 5000,
-    socketTimeout: 10000
+    connectionTimeout: 60000,
+    greetingTimeout: 60000,
+    socketTimeout: 60000
 });
 
 const ACADEMIC_DOMAINS = ['.edu', '.ac.in', '.edu.in', '.edu.au', '.ac.uk', '.edu.pk'];
