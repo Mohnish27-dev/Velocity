@@ -33,16 +33,18 @@ const app = express();
 const httpServer = createServer(app);
 const PORT = process.env.PORT || 5000;
 
-app.use(helmet());
+// Log FRONTEND_URL for debugging
+console.log('🔧 FRONTEND_URL env var:', process.env.FRONTEND_URL);
 
-// CORS configuration with multiple origins support
+// CORS configuration - MUST come before helmet
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'https://velocityyy.netlify.app',  // Hardcoded as fallback
   process.env.FRONTEND_URL,
-  // Handle with and without trailing slash
-  process.env.FRONTEND_URL?.replace(/\/$/, ''),
-].filter(Boolean);
+].filter(Boolean).map(url => url.replace(/\/$/, '')); // Remove trailing slashes
+
+console.log('🔧 Allowed origins:', allowedOrigins);
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -51,18 +53,23 @@ app.use(cors({
     
     // Normalize origin by removing trailing slash
     const normalizedOrigin = origin.replace(/\/$/, '');
-    const normalizedAllowed = allowedOrigins.map(o => o.replace(/\/$/, ''));
     
-    if (normalizedAllowed.includes(normalizedOrigin)) {
+    if (allowedOrigins.includes(normalizedOrigin)) {
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
+      console.log('❌ CORS blocked origin:', origin, '| Allowed:', allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+// Helmet security headers - configured to not interfere with CORS
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }
 }));
 
 const limiter = rateLimit({
