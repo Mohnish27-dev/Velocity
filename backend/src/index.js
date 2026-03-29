@@ -74,7 +74,7 @@ app.use(helmet({
 
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 500, // increased for development
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 1000, // increased for development
   message: {
     error: 'Too many requests, please try again later.'
   },
