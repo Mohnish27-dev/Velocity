@@ -11,7 +11,7 @@ function StackedCircularFooter() {
                 <div className="flex flex-col items-center">
                     {/* Logo in circular container */}
                     <div className="mb-8 rounded-full bg-zinc-900 p-2 border border-zinc-800">
-                        <img src="/speed.png" alt="Velocity" className="w-32 h-32 object-cover" />
+                        <img src="/speed.png" alt="careerpilot" className="w-32 h-32 object-cover" />
                     </div>
 
                     {/* Navigation links */}
@@ -64,7 +64,7 @@ function StackedCircularFooter() {
                     {/* Copyright */}
                     <div className="text-center">
                         <p className="text-sm text-zinc-500">
-                            © {new Date().getFullYear()} Velocity. All rights reserved.
+                            © {new Date().getFullYear()} careerpilot. All rights reserved.
                         </p>
                     </div>
                 </div>

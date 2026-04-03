@@ -1,5 +1,5 @@
 {
-  "name": "velocity",
+  "name": "careerpilot",
   "version": "1.0.0",
   "description": "Backend API for AI Resume Builder",
   "main": "src/index.js",

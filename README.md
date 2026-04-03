@@ -1,4 +1,4 @@
-# 🚀 Velocity - AI Career Platform
+# 🚀 careerpilot - AI Career Platform
 
 <div align="center">
 
@@ -11,7 +11,7 @@
 
 **An intelligent, AI-powered career platform that revolutionizes the job hunting experience through automated resume enhancement, intelligent job matching, AI mock interviews, corporate fellowships, and community-driven networking.**
 
-[Live Demo](https://velocityyyy.netlify.app/) • [Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [API Reference](./API_DOCS/README.md) • [Architecture](./ARCHITECTURE.md) • [Contributing](./CONTRIBUTION.md)
+[Live Demo](https://careerpilotyyy.netlify.app/) • [Features](#-features) • [Tech Stack](#-tech-stack) • [Getting Started](#-getting-started) • [API Reference](./API_DOCS/README.md) • [Architecture](./ARCHITECTURE.md) • [Contributing](./CONTRIBUTION.md)
 
 </div>
 
@@ -123,7 +123,7 @@ The **AI Resume Builder & Career Platform** is a comprehensive full-stack applic
 - **Presence Indicators**: See who's online in real-time
 - **Member Discovery**: Find and connect with fellow job seekers
 
-### 🎓 Velocity Fellowships
+### 🎓 careerpilot Fellowships
 
 - **Corporate Challenges**: Companies post real-world challenges for students
 - **Student Proposals**: Students submit proposals with cover letters and pricing

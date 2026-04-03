@@ -3,7 +3,7 @@ import { TestimonialsColumn } from "./testimonials-columns";
 
 const testimonials = [
   {
-    text: "Velocity's AI resume enhancement is incredible. It helped me tailor my resume perfectly for each application. Landed my dream job in 3 weeks!",
+    text: "careerpilot's AI resume enhancement is incredible. It helped me tailor my resume perfectly for each application. Landed my dream job in 3 weeks!",
     image: "https://randomuser.me/api/portraits/women/1.jpg",
     name: "Sarah Chen",
     role: "Software Engineer at Google",
@@ -27,7 +27,7 @@ const testimonials = [
     role: "Data Scientist at Netflix",
   },
   {
-    text: "Used Velocity to transition from startup to big tech. The resume analyzer helped me highlight the right achievements.",
+    text: "Used careerpilot to transition from startup to big tech. The resume analyzer helped me highlight the right achievements.",
     image: "https://randomuser.me/api/portraits/women/5.jpg",
     name: "Lisa Thompson",
     role: "Engineering Lead at Stripe",
@@ -51,7 +51,7 @@ const testimonials = [
     role: "Full Stack Dev at Airbnb",
   },
   {
-    text: "From application to offer in just 2 weeks. Velocity streamlined my entire job search process beautifully.",
+    text: "From application to offer in just 2 weeks. careerpilot streamlined my entire job search process beautifully.",
     image: "https://randomuser.me/api/portraits/women/9.jpg",
     name: "Jessica Lee",
     role: "ML Engineer at OpenAI",
@@ -85,7 +85,7 @@ export default function TestimonialsSection() {
             of job seekers
           </h2>
           <p className="text-center mt-5 text-zinc-400 max-w-md">
-            Join the community of professionals who accelerated their careers with Velocity
+            Join the community of professionals who accelerated their careers with careerpilot
           </p>
         </motion.div>
 

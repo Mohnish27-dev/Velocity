@@ -41,7 +41,7 @@ export default function HowItWorksSection() {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             How{" "}
             <span className="text-sky-400">
-              Velocity
+              careerpilot
             </span>{" "}
             works
           </h2>

@@ -89,7 +89,7 @@ export default function FellowshipLayout() {
                     </div>
                     <div className="flex flex-col">
                         <span className="text-lg font-bold text-white leading-tight">Fellowships</span>
-                        <span className="text-[10px] text-neutral-400">by Velocity</span>
+                        <span className="text-[10px] text-neutral-400">by careerpilot</span>
                     </div>
                 </NavLink>
             </div>

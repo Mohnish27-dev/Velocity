@@ -83,7 +83,7 @@ export default function ChallengeProposals() {
                     key: orderData.keyId,
                     amount: orderData.amount,
                     currency: orderData.currency,
-                    name: 'Velocity Fellowships',
+                    name: 'careerpilot Fellowships',
                     description: `Payment for: ${orderData.challengeTitle}`,
                     order_id: orderData.orderId,
                     handler: async function (response) {

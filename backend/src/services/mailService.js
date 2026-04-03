@@ -178,7 +178,7 @@ export const sendMatchingJobMail = async ({
     const transport = await initLocalTransporter();
 
     const mailOptions = {
-      from: `"Velocity Jobs" <${process.env.EMAIL_USER}>`,
+      from: `"careerpilot Jobs" <${process.env.EMAIL_USER}>`,
       to: userEmail,
       subject: `🎯 New Job Match: ${jobTitle} at ${companyName}`,
       html: `<h1>New Job Match</h1><p>${jobTitle} at ${companyName}</p><a href="${applyLink}">Apply Now</a>`
@@ -249,7 +249,7 @@ export const sendJobAlertEmail = async ({
     ).join('');
 
     const mailOptions = {
-      from: `"Velocity Jobs" <${process.env.EMAIL_USER}>`,
+      from: `"careerpilot Jobs" <${process.env.EMAIL_USER}>`,
       to: userEmail,
       subject: `🎯 ${jobs.length} New Job${jobs.length > 1 ? 's' : ''} Matching "${alertTitle}"`,
       html: `<h1>New Jobs for ${alertTitle}</h1>${jobListHtml}`
@@ -312,7 +312,7 @@ export const sendProposalApprovalEmail = async ({
     const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 
     const mailOptions = {
-      from: `"Velocity Fellowships" <${process.env.EMAIL_USER}>`,
+      from: `"careerpilot Fellowships" <${process.env.EMAIL_USER}>`,
       to: studentEmail,
       subject: `🎉 Congratulations! Your Proposal Has Been Accepted`,
       html: `
@@ -356,12 +356,12 @@ export const sendVerificationEmail = async ({ email, code }) => {
     const transport = await initLocalTransporter();
 
     const mailOptions = {
-      from: `"Velocity Fellowships" <${process.env.EMAIL_USER}>`,
+      from: `"careerpilot Fellowships" <${process.env.EMAIL_USER}>`,
       to: email,
       subject: 'Verify Your Fellowship Account',
       html: `
       <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #10b981;">Velocity Fellowships</h2>
+        <h2 style="color: #10b981;">careerpilot Fellowships</h2>
         <p>Your verification code is:</p>
         <div style="background: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 20px 0;">
           <span style="font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1f2937;">${code}</span>

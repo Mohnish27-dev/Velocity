@@ -171,7 +171,7 @@ export default function JobSearch() {
             Find Your Dream Job
           </h1>
           <p className="text-lg text-neutral-400 max-w-2xl mx-auto">
-            Search thousands of opportunities and accelerate your career with Velocity
+            Search thousands of opportunities and accelerate your career with careerpilot
           </p>
         </motion.div>
 

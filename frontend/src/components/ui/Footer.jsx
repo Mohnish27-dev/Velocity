@@ -32,7 +32,7 @@ export default function Footer() {
               <div className="w-12 h-20 flex items-center justify-center">
                 <img src="/speed.png" alt="" className="w-full h-full object-contain" />
               </div>
-              <span className="text-xl font-bold text-white">Velocity</span>
+              <span className="text-xl font-bold text-white">careerpilot</span>
             </Link>
             <p className="text-sm text-zinc-500 mb-4">
               AI-powered job search platform for the modern professional.
@@ -94,7 +94,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-zinc-800 flex flex-col md:flex-row justify-center items-center gap-4">
           <p className="text-sm text-zinc-500 ">
-            © {new Date().getFullYear()} Velocity. All rights reserved.
+            © {new Date().getFullYear()} careerpilot. All rights reserved.
           </p>
           
         </div>

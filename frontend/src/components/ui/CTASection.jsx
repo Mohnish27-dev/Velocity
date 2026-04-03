@@ -31,7 +31,7 @@ export default function CTASection() {
           </h2>
 
           <p className="text-lg text-zinc-400 mb-10 max-w-2xl mx-auto">
-            Join thousands of professionals who have transformed their job search with Velocity. 
+            Join thousands of professionals who have transformed their job search with careerpilot. 
             Free to start, powerful to scale.
           </p>
 

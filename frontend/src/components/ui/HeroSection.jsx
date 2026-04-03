@@ -94,7 +94,7 @@ export default function HeroSection() {
               className="block"
             >
               with{" "}
-              <AnimatedGradientText>Velocity</AnimatedGradientText>
+              <AnimatedGradientText>careerpilot</AnimatedGradientText>
             </motion.span>
           </h1>
 

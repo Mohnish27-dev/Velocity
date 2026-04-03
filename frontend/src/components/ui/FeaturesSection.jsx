@@ -197,7 +197,7 @@ export default function FeaturesSection() {
           transition={{ delay: 0.1 }}
           className="text-sm lg:text-base max-w-2xl my-4 mx-auto text-zinc-400 text-center font-normal"
         >
-          From AI resume optimization to global job search, Velocity provides
+          From AI resume optimization to global job search, careerpilot provides
           the tools you need to land your dream job faster.
         </motion.p>
       </div>

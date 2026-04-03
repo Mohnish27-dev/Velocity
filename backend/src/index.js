@@ -40,7 +40,7 @@ console.log('🔧 FRONTEND_URL env var:', process.env.FRONTEND_URL);
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://velocityyy.netlify.app',  // Hardcoded as fallback
+  'https://careerpilotyy.netlify.app',  // Hardcoded as fallback
   process.env.FRONTEND_URL,
 ].filter(Boolean).map(url => url.replace(/\/$/, '')); // Remove trailing slashes
 
@@ -112,7 +112,7 @@ app.use((req, res) => {
 app.use(errorHandler);
 const startServer = async () => {
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/velocity';
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/careerpilot';
 
     console.log('📦 Connecting to MongoDB...');
     await mongoose.connect(mongoUri, {

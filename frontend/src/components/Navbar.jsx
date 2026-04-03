@@ -63,7 +63,7 @@ export default function Navbar() {
               <img src="/speed.png" alt="" className="w-full h-full object-cover" />
             </div>
             <span className="text-xl font-bold text-white">
-              Velocity
+              careerpilot
             </span>
           </Link>
 
